@@ -431,8 +431,8 @@ const OUTLINE = "#7a5a3e";
 function kiwiBeakMarkup(mood) {
   if (mood === "yum") {
     return `
-      <path d="M104 94 L176 92 L106 110 Z" fill="#e8b273" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
-      <path d="M104 114 L176 124 L106 120 Z" fill="#d99a58" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M104 94 L174 86 L104 106 Z" fill="#e8b273" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M104 110 L174 126 L104 122 Z" fill="#d99a58" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
     `;
   }
   return `<path d="M104 94 L178 108 L104 120 Z" fill="#e8b273" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>`;
@@ -475,11 +475,11 @@ function renderKiwiSVG(mood, level) {
 
 function foxMouthMarkup(mood) {
   if (mood === "yum") {
-    return `<ellipse cx="100" cy="124" rx="7" ry="7" fill="#a5445c" stroke="${OUTLINE}" stroke-width="1.5"/>
-            <ellipse cx="100" cy="126" rx="4" ry="3" fill="#ff8fa8"/>`;
+    return `<ellipse cx="100" cy="122" rx="9" ry="8" fill="#a5445c"/>
+            <ellipse cx="100" cy="125" rx="5" ry="4" fill="#ff8fa8"/>`;
   }
   if (mood === "sad") {
-    return `<path d="M91 127 q9 -8 18 0" stroke="${OUTLINE}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+    return `<path d="M90 126 q10 -9 20 0" stroke="${OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
   }
   return `<path d="M100 119 q-7 9 -13 1 M100 119 q7 9 13 1" stroke="${OUTLINE}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
 }
