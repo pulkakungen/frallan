@@ -229,8 +229,8 @@ function defaultState() {
 // går att visa upp utan att röra Olles riktiga sparning.
 function seedDemoState() {
   const s = defaultState();
-  s.petType = "fox";
-  s.petName = "Rufus";
+  s.petType = "kiwi";
+  s.petName = "Nappe";
   s.level = 7;
   s.xp = 120;
   s.food = 3;
@@ -491,103 +491,40 @@ function petSizeScale(level) {
   return 1;
 }
 
-// Båda djuren ritas i sticker-stil: mjuka rundade former, tunn ljus kontur,
-// inga spetsiga hörn. Allt som kan rundas av rundas av.
-const OUTLINE = "#96754f";
-const SW = 2.4;
 
-// Kiwin har egna pyttesmå prickögon, inte rävens stora glittriga.
-function kiwiEyesMarkup(mood, cx1, cx2, cy) {
-  if (mood === "love") {
-    const heart = (cx) => `
-      <path d="M${cx} ${cy + 4} C${cx - 5.5} ${cy - 2}, ${cx - 1.5} ${cy - 8}, ${cx} ${cy - 4}
-               C${cx + 1.5} ${cy - 8}, ${cx + 5.5} ${cy - 2}, ${cx} ${cy + 4} Z" fill="#ff6f9c"/>`;
-    return heart(cx1) + heart(cx2);
-  }
-  if (mood === "yum") {
-    return `
-      <path d="M${cx1 - 6} ${cy + 3} q6 -9 12 0" stroke="#3f2f22" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 6} ${cy + 3} q6 -9 12 0" stroke="#3f2f22" stroke-width="3" fill="none" stroke-linecap="round"/>
-    `;
-  }
-  if (mood === "sad") {
-    return `
-      <circle cx="${cx1}" cy="${cy}" r="4.5" fill="#3f2f22"/>
-      <circle cx="${cx2}" cy="${cy}" r="4.5" fill="#3f2f22"/>
-      <path d="M${cx1 - 6} ${cy - 9} q6 -4 11 -1" stroke="#3f2f22" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 5} ${cy - 10} q5 -3 11 1" stroke="#3f2f22" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <circle cx="${cx2 + 5}" cy="${cy + 9}" r="2.6" fill="#bfe4ff"/>
-    `;
-  }
-  return `
-    <circle cx="${cx1}" cy="${cy}" r="5" fill="#3f2f22"/>
-    <circle cx="${cx2}" cy="${cy}" r="5" fill="#3f2f22"/>
-  `;
-}
+/* ---------------------------------------------------------
+   Kiwin är riktig illustration, inte ritad i kod.
+   Varje min och varje nivå har sin egen pose ur bildarket.
+   --------------------------------------------------------- */
+const KIWI_MOOD_POSE = { yum: 18, love: 11, sad: 5 };
 
-const KIWI_OUTLINE = "#6b4a33";
-const KIWI_BODY = "#a8764f";
-const KIWI_PALE = "#f2d9b6";
-
-// Lång smal näbb som pekar snett nedåt, med en liten näsborre nära spetsen.
-function kiwiBeakMarkup(mood) {
-  if (mood === "yum") {
-    // En näbb öppnas i gångjärnet vid huvudet: halvorna sitter ihop där och
-    // glider isär mot spetsen.
-    return `
-      <path d="M89 62 L26 88 L37 117 Z" fill="#8c4a4a"/>
-      <path d="M84 52 L24 82 Q19 85 25 88 L90 64 Z"
-            fill="${KIWI_PALE}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M90 64 L34 113 Q30 117 36 119 L92 75 Z"
-            fill="${KIWI_PALE}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
-    `;
-  }
-  return `
-    <path d="M84 56 L27 100 Q22 104 28 107 L90 72 Z"
-          fill="${KIWI_PALE}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M45 91 l7 -5" stroke="${KIWI_OUTLINE}" stroke-width="2.5" stroke-linecap="round"/>
-  `;
-}
-
-// Korta streck i fjäderdräkten, som på en riktig kiwi.
-const KIWI_DASHES = [
-  [70, 92], [70, 101], [84, 112], [84, 121], [120, 88], [120, 97],
-  [126, 116], [126, 125], [98, 130], [106, 76]
+// Nya poser låses upp varannan nivå och blir kiwins vardagsutseende.
+const KIWI_IDLE_POSES = [
+  { level: 1, pose: 13, label: "Kiwi" },
+  { level: 2, pose: 17, label: "Spanaren" },
+  { level: 4, pose: 7, label: "Promenaden" },
+  { level: 6, pose: 0, label: "Springaren" },
+  { level: 8, pose: 9, label: "Vilostunden" },
+  { level: 10, pose: 16, label: "Blomman" },
+  { level: 12, pose: 19, label: "Hatten" },
+  { level: 14, pose: 8, label: "Ballongen" },
+  { level: 16, pose: 12, label: "Brevet" },
+  { level: 18, pose: 15, label: "Viften" }
 ];
 
+function kiwiIdlePose(level) {
+  const unlocked = KIWI_IDLE_POSES.filter((p) => level >= p.level);
+  return unlocked[unlocked.length - 1] || KIWI_IDLE_POSES[0];
+}
+
+function kiwiPoseNumber(mood, level) {
+  if (mood in KIWI_MOOD_POSE) return KIWI_MOOD_POSE[mood];
+  return kiwiIdlePose(level).pose;
+}
+
 function renderKiwiSVG(mood, level) {
-  const dashes = KIWI_DASHES.map(
-    ([x, y]) => `<path d="M${x} ${y} l10 -3" stroke="${KIWI_OUTLINE}" stroke-width="2.6" stroke-linecap="round" opacity="0.65"/>`
-  ).join("");
-
-  const leg = (hipX, footX) => `
-    <path d="M${hipX} 132 L${footX} 156" stroke="${KIWI_OUTLINE}" stroke-width="7" stroke-linecap="round"/>
-    <path d="M${footX} 156 L${footX - 11} 163 M${footX} 156 L${footX - 1} 168 M${footX} 156 L${footX + 10} 164"
-          stroke="${KIWI_OUTLINE}" stroke-width="6.5" stroke-linecap="round"/>
-    <path d="M${hipX} 132 L${footX} 156" stroke="${KIWI_PALE}" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M${footX} 156 L${footX - 11} 163 M${footX} 156 L${footX - 1} 168 M${footX} 156 L${footX + 10} 164"
-          stroke="${KIWI_PALE}" stroke-width="3" stroke-linecap="round"/>`;
-
-  return `
-  <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="100" cy="172" rx="40" ry="5" fill="#000" opacity="0.06"/>
-    ${leg(88, 76)}
-    ${leg(112, 124)}
-
-    <!-- päronformad kropp, smal upptill och bred nedtill -->
-    <path d="M100 20 C124 20 136 44 141 74 C147 104 140 142 100 142 C60 142 53 104 59 74 C64 44 76 20 100 20 Z"
-          fill="${KIWI_BODY}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
-    ${dashes}
-
-    <!-- liten vinge -->
-    <path d="M132 96 Q140 106 133 116" stroke="${KIWI_OUTLINE}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-
-    ${kiwiBeakMarkup(mood)}
-    <ellipse cx="97" cy="74" rx="7.5" ry="4.5" fill="#ff9eb5" opacity="0.75"/>
-    <ellipse cx="124" cy="74" rx="7.5" ry="4.5" fill="#ff9eb5" opacity="0.75"/>
-    ${kiwiEyesMarkup(mood, 97, 120, 58)}
-    ${accessoryMarkup(level, "kiwi")}
-  </svg>`;
+  const n = String(kiwiPoseNumber(mood, level)).padStart(2, "0");
+  return `<img class="pet-art" src="djur/kiwi-${n}.svg" alt="" draggable="false">`;
 }
 
 const FOX_OUTLINE = "#5c3a24";
@@ -918,12 +855,15 @@ function completeTask(taskId, sectionId) {
         burstConfetti(30);
       }, 350);
 
-      const newAccessory = ACCESSORY_TIERS.find((t) => t.level > levelBefore && t.level <= state.level);
+      const newAccessory =
+        state.petType === "kiwi"
+          ? KIWI_IDLE_POSES.find((t) => t.level > levelBefore && t.level <= state.level)
+          : ACCESSORY_TIERS.find((t) => t.level > levelBefore && t.level <= state.level);
       const newSizeTier = [7, 14, 20].find((l) => l > levelBefore && l <= state.level);
       let extraDelay = 900;
       if (newAccessory) {
         setTimeout(() => {
-          showToast(`Ny sak: ${newAccessory.label}! ✨`, true);
+          showToast(`Nytt utseende: ${newAccessory.label}! ✨`, true);
           burstConfetti(24);
         }, extraDelay);
         extraDelay += 550;

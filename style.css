@@ -210,6 +210,17 @@ button {
 }
 .pet-mini { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
 .pet-avatar { width: 54px; height: 54px; flex-shrink: 0; }
+
+/* Djur som är riktiga bildfiler fyller sin ruta utan att bli utdragna. */
+.pet-art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
 .pet-info { flex: 1; min-width: 0; }
 .pet-name-row {
   display: flex;
