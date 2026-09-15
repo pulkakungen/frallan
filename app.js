@@ -81,7 +81,8 @@ const TASK_SECTIONS = [
       { id: "tvatt", emoji: "🧺", text: "Tvätt i korgen" },
       { id: "besticken", emoji: "🍴", text: "Töm besticken" },
       { id: "duka", emoji: "🍽️", text: "Duka" },
-      { id: "laslaxa", emoji: "📖", text: "Gör läsläxan" }
+      { id: "laslaxa", emoji: "📖", text: "Gör läsläxan" },
+      { id: "lordagsgodis", emoji: "🍬", text: "Handla lördagsgodis", days: [DAG_LOR] }
     ]
   },
   {
@@ -367,18 +368,18 @@ function eyesMarkup(mood, cx1, cx2, cy) {
     `;
   }
   return `
-    <circle cx="${cx1}" cy="${cy}" r="9" fill="#3a2e45"/>
-    <circle cx="${cx2}" cy="${cy}" r="9" fill="#3a2e45"/>
-    <circle cx="${cx1 - 3}" cy="${cy - 3}" r="2.6" fill="#fff"/>
-    <circle cx="${cx2 - 3}" cy="${cy - 3}" r="2.6" fill="#fff"/>
+    <circle cx="${cx1}" cy="${cy}" r="10.5" fill="#4a3a32"/>
+    <circle cx="${cx2}" cy="${cy}" r="10.5" fill="#4a3a32"/>
+    <circle cx="${cx1 - 3.5}" cy="${cy - 3.5}" r="3.4" fill="#fff"/>
+    <circle cx="${cx2 - 3.5}" cy="${cy - 3.5}" r="3.4" fill="#fff"/>
     <circle cx="${cx1 + 2.5}" cy="${cy + 2.5}" r="1.4" fill="#fff" opacity="0.8"/>
     <circle cx="${cx2 + 2.5}" cy="${cy + 2.5}" r="1.4" fill="#fff" opacity="0.8"/>
   `;
 }
 
 function blushMarkup(cx1, cx2, cy) {
-  return `<ellipse cx="${cx1}" cy="${cy}" rx="9" ry="5.5" fill="#ffb4c6" opacity="0.7"/>
-          <ellipse cx="${cx2}" cy="${cy}" rx="9" ry="5.5" fill="#ffb4c6" opacity="0.7"/>`;
+  return `<ellipse cx="${cx1}" cy="${cy}" rx="11" ry="6.5" fill="#ffb4c6" opacity="0.65"/>
+          <ellipse cx="${cx2}" cy="${cy}" rx="11" ry="6.5" fill="#ffb4c6" opacity="0.65"/>`;
 }
 
 // Pynt låses upp varannan nivå och blir kvar. Bara de två senaste visas,
@@ -483,49 +484,57 @@ function petSizeScale(level) {
   return 1;
 }
 
-// Båda djuren ritas i sticker-stil: hel figur, tunn mörk kontur, mjuka ljusa färger.
-const OUTLINE = "#7a5a3e";
+// Båda djuren ritas i sticker-stil: mjuka rundade former, tunn ljus kontur,
+// inga spetsiga hörn. Allt som kan rundas av rundas av.
+const OUTLINE = "#96754f";
+const SW = 2.4;
 
 function kiwiBeakMarkup(mood) {
   if (mood === "yum") {
     return `
-      <path d="M104 94 L174 86 L104 106 Z" fill="#e8b273" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
-      <path d="M104 110 L174 126 L104 122 Z" fill="#d99a58" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M102 94 Q140 88 162 92 Q170 95 162 99 Q140 104 102 104 Z"
+            fill="#e8b273" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
+      <path d="M102 110 Q140 112 162 118 Q170 121 162 123 Q140 122 102 120 Z"
+            fill="#d99a58" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
     `;
   }
-  return `<path d="M104 94 L178 108 L104 120 Z" fill="#e8b273" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>`;
+  return `<path d="M102 96 Q142 94 166 100 Q175 104 166 108 Q142 116 102 114 Z"
+                fill="#e8b273" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
 }
 
-// Prickig fjäderdräkt, som på en riktig kiwi.
+// Mjuk prickig fjäderdräkt.
 const KIWI_SPECKS = [
   [66, 60], [90, 50], [118, 54], [142, 66], [56, 84], [150, 90],
-  [62, 110], [146, 116], [78, 130], [120, 132], [100, 140], [134, 42],
-  [74, 44], [46, 100], [156, 102], [98, 64]
+  [62, 112], [146, 118], [78, 132], [120, 134], [100, 142], [134, 42],
+  [74, 44], [48, 100], [154, 104], [98, 64]
 ];
 
 function renderKiwiSVG(mood, level) {
   const specks = KIWI_SPECKS.map(
-    ([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="4.5" ry="3.2" fill="#8a6440" opacity="0.45" transform="rotate(-20 ${x} ${y})"/>`
+    ([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="3.6" fill="#a2764c" opacity="0.4" transform="rotate(-20 ${x} ${y})"/>`
   ).join("");
   return `
   <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="100" cy="170" rx="44" ry="6" fill="#000" opacity="0.06"/>
 
-    <!-- ben -->
-    <path d="M84 146 L80 164 M116 146 L120 164" stroke="${OUTLINE}" stroke-width="7" stroke-linecap="round"/>
-    <path d="M84 147 L81 163 M116 147 L119 163" stroke="#e8b273" stroke-width="4" stroke-linecap="round"/>
-    <path d="M70 165 L92 165 M108 165 L130 165" stroke="${OUTLINE}" stroke-width="6" stroke-linecap="round"/>
-    <path d="M70 165 L92 165 M108 165 L130 165" stroke="#e8b273" stroke-width="3" stroke-linecap="round"/>
+    <!-- mjuka små ben med rundade tår -->
+    <path d="M85 148 L82 160 M115 148 L118 160" stroke="${OUTLINE}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M85 148 L82 160 M115 148 L118 160" stroke="#e8b273" stroke-width="6" stroke-linecap="round"/>
+    <path d="M74 162 L90 162 M110 162 L126 162" stroke="${OUTLINE}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M74 162 L90 162 M110 162 L126 162" stroke="#e8b273" stroke-width="6" stroke-linecap="round"/>
 
-    <!-- rund fjäderkropp -->
-    <path d="M100 38 Q146 38 158 76 Q168 110 146 132 Q122 152 100 152 Q78 152 54 132 Q32 110 42 76 Q54 38 100 38 Z"
-          fill="#c08a5c" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M100 152 Q74 152 60 130 Q80 142 100 142 Q120 142 140 130 Q126 152 100 152 Z" fill="#dcb48a" opacity="0.8"/>
+    <!-- rund, luddig kropp -->
+    <path d="M100 34 C142 34 162 62 162 94 C162 126 136 152 100 152 C64 152 38 126 38 94 C38 62 58 34 100 34 Z"
+          fill="#c9956a" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
+    <path d="M100 152 C74 152 56 138 50 122 C72 140 100 142 100 142 C100 142 128 140 150 122 C144 138 126 152 100 152 Z"
+          fill="#e3bf98" opacity="0.85"/>
     ${specks}
 
-    <path d="M58 92 Q76 104 68 122" stroke="${OUTLINE}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    ${blushMarkup(70, 132, 92)}
-    ${eyesMarkup(mood, 84, 124, 74)}
+    <!-- liten mjuk vinge -->
+    <path d="M58 92 Q78 106 68 124" stroke="${OUTLINE}" stroke-width="${SW}" fill="none" stroke-linecap="round"/>
+
+    ${blushMarkup(68, 134, 92)}
+    ${eyesMarkup(mood, 84, 124, 72)}
     ${kiwiBeakMarkup(mood)}
     ${accessoryMarkup(level)}
   </svg>`;
@@ -533,52 +542,63 @@ function renderKiwiSVG(mood, level) {
 
 function foxMouthMarkup(mood) {
   if (mood === "yum") {
-    return `<ellipse cx="100" cy="122" rx="9" ry="8" fill="#a5445c"/>
-            <ellipse cx="100" cy="125" rx="5" ry="4" fill="#ff8fa8"/>`;
+    return `<ellipse cx="100" cy="128" rx="8" ry="7" fill="#a5445c"/>
+            <ellipse cx="100" cy="130" rx="4.5" ry="3.5" fill="#ff8fa8"/>`;
   }
   if (mood === "sad") {
-    return `<path d="M90 126 q10 -9 20 0" stroke="${OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    return `<path d="M91 130 q9 -8 18 0" stroke="${OUTLINE}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
   }
-  return `<path d="M100 119 q-7 9 -13 1 M100 119 q7 9 13 1" stroke="${OUTLINE}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  return `<path d="M100 124 q-6 9 -12 2 M100 124 q6 9 12 2" stroke="${OUTLINE}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
 }
 
 function renderFoxSVG(mood, level) {
+  // Svansen är ett tjockt streck med runda ändar, så den blir luddig och mjuk.
+  const tailPath = "M128 146 Q172 142 172 110 Q172 88 158 84";
   return `
   <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="100" cy="172" rx="44" ry="6" fill="#000" opacity="0.06"/>
 
-    <!-- yvig svans som sveper ut bakom, med vit spets -->
-    <path d="M126 150 C158 160 186 142 186 116 C186 92 168 80 154 84 C172 96 174 120 160 132 C148 142 132 140 126 150 Z"
-          fill="#f2bc78" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M186 116 C186 92 168 80 154 84 C170 94 176 108 174 118 Z"
-          fill="#fff8ef" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="${tailPath}" stroke="${OUTLINE}" stroke-width="40" fill="none" stroke-linecap="round"/>
+    <path d="${tailPath}" stroke="#ef9f52" stroke-width="35" fill="none" stroke-linecap="round"/>
+    <path d="M166 96 Q172 88 159 84" stroke="#fff8ef" stroke-width="33" fill="none" stroke-linecap="round"/>
 
-    <!-- sittande kropp -->
-    <ellipse cx="100" cy="140" rx="44" ry="30" fill="#f2bc78" stroke="${OUTLINE}" stroke-width="2.5"/>
-    <ellipse cx="100" cy="148" rx="28" ry="20" fill="#fff8ef"/>
-    <ellipse cx="78" cy="162" rx="13" ry="8" fill="#fff8ef" stroke="${OUTLINE}" stroke-width="2.5"/>
-    <ellipse cx="122" cy="162" rx="13" ry="8" fill="#fff8ef" stroke="${OUTLINE}" stroke-width="2.5"/>
+    <!-- stora rundade öron med mörka toppar -->
+    <path d="M52 58 Q38 20 62 14 Q84 24 88 46 Q68 48 52 58 Z"
+          fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
+    <path d="M62 14 Q44 20 44 36 Q54 26 68 24 Z" fill="#6b5340"/>
+    <path d="M60 50 Q54 30 66 26 Q78 32 78 44 Q68 44 60 50 Z" fill="#ffd2b4"/>
+    <path d="M148 58 Q162 20 138 14 Q116 24 112 46 Q132 48 148 58 Z"
+          fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
+    <path d="M138 14 Q156 20 156 36 Q146 26 132 24 Z" fill="#6b5340"/>
+    <path d="M140 50 Q146 30 134 26 Q122 32 122 44 Q132 44 140 50 Z" fill="#ffd2b4"/>
 
-    <!-- spetsiga öron med mörka toppar -->
-    <path d="M56 64 L42 14 L88 44 Z" fill="#f2bc78" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M61 56 L52 26 L76 42 Z" fill="#ffd2b4"/>
-    <path d="M42 14 L49 34 L59 25 Z" fill="#7a5a3e"/>
-    <path d="M144 64 L158 14 L112 44 Z" fill="#f2bc78" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M139 56 L148 26 L124 42 Z" fill="#ffd2b4"/>
-    <path d="M158 14 L151 34 L141 25 Z" fill="#7a5a3e"/>
+    <!-- kropp med mörka rävstrumpor -->
+    <ellipse cx="100" cy="146" rx="42" ry="27" fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}"/>
+    <ellipse cx="100" cy="152" rx="26" ry="18" fill="#fff8ef"/>
+    <ellipse cx="78" cy="164" rx="13" ry="8" fill="#6b5340" stroke="${OUTLINE}" stroke-width="${SW}"/>
+    <ellipse cx="122" cy="164" rx="13" ry="8" fill="#6b5340" stroke="${OUTLINE}" stroke-width="${SW}"/>
 
-    <!-- kilformat rävhuvud, brett upptill och smalt mot nosen -->
-    <path d="M54 76 Q52 46 78 38 Q100 31 122 38 Q148 46 146 76 Q143 102 122 116 Q100 130 78 116 Q57 102 54 76 Z"
-          fill="#f2bc78" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+    <!-- huvud som smalnar av till en lång mjuk nos -->
+    <path d="M100 24
+             C134 24 154 44 154 70
+             C154 84 149 94 140 100
+             C132 105 124 108 117 112
+             C113 122 108 134 100 140
+             C92 134 87 122 83 112
+             C76 108 68 105 60 100
+             C51 94 46 84 46 70
+             C46 44 66 24 100 24 Z"
+          fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
 
-    <!-- vita kinder och nosparti -->
-    <path d="M100 128 Q74 114 68 88 Q85 100 100 100 Q115 100 132 88 Q126 114 100 128 Z" fill="#fff8ef"/>
+    <!-- vitt nosparti hela vägen ut på nosen -->
+    <path d="M68 98 Q100 114 132 98 Q131 122 113 135 Q100 143 87 135 Q69 122 68 98 Z" fill="#fff8ef"/>
+    <path d="M56 80 Q60 56 78 46 Q64 66 62 86 Z" fill="#fff8ef" opacity="0.3"/>
 
-    ${blushMarkup(70, 130, 96)}
-    ${eyesMarkup(mood, 82, 118, 80)}
+    ${blushMarkup(64, 136, 92)}
+    ${eyesMarkup(mood, 80, 120, 74)}
 
-    <!-- svart nostryne längst ut på nosen -->
-    <path d="M93 110 Q100 105 107 110 Q100 120 93 110 Z" fill="#4a3a2c"/>
+    <!-- liten rundad nostryne längst ut -->
+    <path d="M92 112 Q100 108 108 112 Q106 121 100 122 Q94 121 92 112 Z" fill="#4a3a32"/>
     ${foxMouthMarkup(mood)}
     ${accessoryMarkup(level)}
   </svg>`;
