@@ -63,28 +63,25 @@ const TASK_SECTIONS = [
       { id: "klader", emoji: "👕", text: "Ta på kläder" },
       { id: "frukost", emoji: "🥣", text: "Ät frukost" },
       { id: "tander-morgon", emoji: "🪥", text: "Borsta tänder" },
-      { id: "vaska", emoji: "🎒", text: "Ta väskan" }
+      { id: "frukt", emoji: "🍎", text: "Packa frukt" },
+      { id: "gympa", emoji: "🩳", text: "Ta med gympakläder", days: [DAG_TIS, DAG_TORS] },
+      { id: "vaska", emoji: "🎒", text: "Ta väskan" },
+      { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR }
     ]
   },
   {
-    id: "dagen",
-    emoji: "☀️",
-    title: "Dagen",
+    id: "eftermiddag",
+    emoji: "🌤️",
+    title: "Eftermiddag",
     tasks: [
-      { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR },
-      { id: "vatten", emoji: "💧", text: "Drick vatten" },
-      { id: "mellanmal", emoji: "🍎", text: "Ät mellanmål" },
-      { id: "leka-ute", emoji: "🌳", text: "Lek ute" }
-    ]
-  },
-  {
-    id: "hemma",
-    emoji: "🏠",
-    title: "Hemma",
-    tasks: [
-      { id: "leksaker", emoji: "🧸", text: "Plocka leksaker" },
+      { id: "gaby", emoji: "🧸", text: "Plocka Gabys saker" },
+      { id: "lego", emoji: "🧱", text: "Ta undan lego" },
+      { id: "magneter", emoji: "🧲", text: "Ta undan magneter" },
+      { id: "bilar", emoji: "🚗", text: "Ta undan bilarna" },
       { id: "tvatt", emoji: "🧺", text: "Tvätt i korgen" },
-      { id: "duka", emoji: "🍽️", text: "Duka bordet" }
+      { id: "besticken", emoji: "🍴", text: "Töm besticken" },
+      { id: "duka", emoji: "🍽️", text: "Duka" },
+      { id: "laslaxa", emoji: "📖", text: "Gör läsläxan" }
     ]
   },
   {
@@ -92,8 +89,9 @@ const TASK_SECTIONS = [
     emoji: "🌙",
     title: "Kväll",
     tasks: [
-      { id: "duscha", emoji: "🚿", text: "Duscha" },
+      { id: "duscha", emoji: "🚿", text: "Duscha", days: [DAG_ONS, DAG_FRE] },
       { id: "tander-kvall", emoji: "🪥", text: "Borsta tänder" },
+      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan" },
       { id: "saga", emoji: "📚", text: "Läs en saga" },
       { id: "sova", emoji: "😴", text: "Sova gott" }
     ]
