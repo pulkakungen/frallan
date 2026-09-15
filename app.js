@@ -430,7 +430,8 @@ const ACCESSORY_TIERS = [
   {
     level: 12,
     label: "Solglasögon",
-    markup: `<g transform="translate(101,82)">
+    offset: { kiwi: [8, -24] },
+    markup: `<g transform="translate(101,74)">
       <ellipse cx="-20" cy="0" rx="11" ry="9" fill="#4a3f5c"/>
       <ellipse cx="20" cy="0" rx="11" ry="9" fill="#4a3f5c"/>
       <path d="M-9 -2 Q0 -9 9 -2" stroke="#4a3f5c" stroke-width="3" fill="none"/>
@@ -472,9 +473,15 @@ const ACCESSORY_TIERS = [
   }
 ];
 
-function accessoryMarkup(level) {
+function accessoryMarkup(level, type) {
   const earned = ACCESSORY_TIERS.filter((t) => level >= t.level);
-  return earned.slice(-2).map((t) => t.markup).join("");
+  return earned
+    .slice(-2)
+    .map((t) => {
+      const off = t.offset && t.offset[type];
+      return off ? `<g transform="translate(${off[0]},${off[1]})">${t.markup}</g>` : t.markup;
+    })
+    .join("");
 }
 
 function petSizeScale(level) {
@@ -489,54 +496,94 @@ function petSizeScale(level) {
 const OUTLINE = "#96754f";
 const SW = 2.4;
 
+// Kiwin har egna pyttesmå prickögon, inte rävens stora glittriga.
+function kiwiEyesMarkup(mood, cx1, cx2, cy) {
+  if (mood === "love") {
+    const heart = (cx) => `
+      <path d="M${cx} ${cy + 4} C${cx - 5.5} ${cy - 2}, ${cx - 1.5} ${cy - 8}, ${cx} ${cy - 4}
+               C${cx + 1.5} ${cy - 8}, ${cx + 5.5} ${cy - 2}, ${cx} ${cy + 4} Z" fill="#ff6f9c"/>`;
+    return heart(cx1) + heart(cx2);
+  }
+  if (mood === "yum") {
+    return `
+      <path d="M${cx1 - 6} ${cy + 3} q6 -9 12 0" stroke="#3f2f22" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M${cx2 - 6} ${cy + 3} q6 -9 12 0" stroke="#3f2f22" stroke-width="3" fill="none" stroke-linecap="round"/>
+    `;
+  }
+  if (mood === "sad") {
+    return `
+      <circle cx="${cx1}" cy="${cy}" r="4.5" fill="#3f2f22"/>
+      <circle cx="${cx2}" cy="${cy}" r="4.5" fill="#3f2f22"/>
+      <path d="M${cx1 - 6} ${cy - 9} q6 -4 11 -1" stroke="#3f2f22" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M${cx2 - 5} ${cy - 10} q5 -3 11 1" stroke="#3f2f22" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="${cx2 + 5}" cy="${cy + 9}" r="2.6" fill="#bfe4ff"/>
+    `;
+  }
+  return `
+    <circle cx="${cx1}" cy="${cy}" r="5" fill="#3f2f22"/>
+    <circle cx="${cx2}" cy="${cy}" r="5" fill="#3f2f22"/>
+  `;
+}
+
+const KIWI_OUTLINE = "#6b4a33";
+const KIWI_BODY = "#a8764f";
+const KIWI_PALE = "#f2d9b6";
+
+// Lång smal näbb som pekar snett nedåt, med en liten näsborre nära spetsen.
 function kiwiBeakMarkup(mood) {
   if (mood === "yum") {
     return `
-      <path d="M102 94 Q140 88 162 92 Q170 95 162 99 Q140 104 102 104 Z"
-            fill="#e8b273" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
-      <path d="M102 110 Q140 112 162 118 Q170 121 162 123 Q140 122 102 120 Z"
-            fill="#d99a58" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
+      <path d="M84 52 L28 92 Q23 96 29 98 L90 64 Z"
+            fill="${KIWI_PALE}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M86 74 L30 108 Q25 111 31 113 L90 86 Z"
+            fill="${KIWI_PALE}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
     `;
   }
-  return `<path d="M102 96 Q142 94 166 100 Q175 104 166 108 Q142 116 102 114 Z"
-                fill="#e8b273" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+  return `
+    <path d="M84 56 L27 100 Q22 104 28 107 L90 72 Z"
+          fill="${KIWI_PALE}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M45 91 l7 -5" stroke="${KIWI_OUTLINE}" stroke-width="2.5" stroke-linecap="round"/>
+  `;
 }
 
-// Mjuk prickig fjäderdräkt.
-const KIWI_SPECKS = [
-  [66, 60], [90, 50], [118, 54], [142, 66], [56, 84], [150, 90],
-  [62, 112], [146, 118], [78, 132], [120, 134], [100, 142], [134, 42],
-  [74, 44], [48, 100], [154, 104], [98, 64]
+// Korta streck i fjäderdräkten, som på en riktig kiwi.
+const KIWI_DASHES = [
+  [70, 92], [70, 101], [84, 112], [84, 121], [120, 88], [120, 97],
+  [126, 116], [126, 125], [98, 130], [106, 76]
 ];
 
 function renderKiwiSVG(mood, level) {
-  const specks = KIWI_SPECKS.map(
-    ([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="3.6" fill="#a2764c" opacity="0.4" transform="rotate(-20 ${x} ${y})"/>`
+  const dashes = KIWI_DASHES.map(
+    ([x, y]) => `<path d="M${x} ${y} l10 -3" stroke="${KIWI_OUTLINE}" stroke-width="2.6" stroke-linecap="round" opacity="0.65"/>`
   ).join("");
+
+  const leg = (hipX, footX) => `
+    <path d="M${hipX} 132 L${footX} 156" stroke="${KIWI_OUTLINE}" stroke-width="7" stroke-linecap="round"/>
+    <path d="M${footX} 156 L${footX - 11} 163 M${footX} 156 L${footX - 1} 168 M${footX} 156 L${footX + 10} 164"
+          stroke="${KIWI_OUTLINE}" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M${hipX} 132 L${footX} 156" stroke="${KIWI_PALE}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M${footX} 156 L${footX - 11} 163 M${footX} 156 L${footX - 1} 168 M${footX} 156 L${footX + 10} 164"
+          stroke="${KIWI_PALE}" stroke-width="3" stroke-linecap="round"/>`;
+
   return `
   <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="100" cy="170" rx="44" ry="6" fill="#000" opacity="0.06"/>
+    <ellipse cx="100" cy="172" rx="40" ry="5" fill="#000" opacity="0.06"/>
+    ${leg(88, 76)}
+    ${leg(112, 124)}
 
-    <!-- mjuka små ben med rundade tår -->
-    <path d="M85 148 L82 160 M115 148 L118 160" stroke="${OUTLINE}" stroke-width="9" stroke-linecap="round"/>
-    <path d="M85 148 L82 160 M115 148 L118 160" stroke="#e8b273" stroke-width="6" stroke-linecap="round"/>
-    <path d="M74 162 L90 162 M110 162 L126 162" stroke="${OUTLINE}" stroke-width="9" stroke-linecap="round"/>
-    <path d="M74 162 L90 162 M110 162 L126 162" stroke="#e8b273" stroke-width="6" stroke-linecap="round"/>
+    <!-- päronformad kropp, smal upptill och bred nedtill -->
+    <path d="M100 20 C124 20 136 44 141 74 C147 104 140 142 100 142 C60 142 53 104 59 74 C64 44 76 20 100 20 Z"
+          fill="${KIWI_BODY}" stroke="${KIWI_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
+    ${dashes}
 
-    <!-- rund, luddig kropp -->
-    <path d="M100 34 C142 34 162 62 162 94 C162 126 136 152 100 152 C64 152 38 126 38 94 C38 62 58 34 100 34 Z"
-          fill="#c9956a" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
-    <path d="M100 152 C74 152 56 138 50 122 C72 140 100 142 100 142 C100 142 128 140 150 122 C144 138 126 152 100 152 Z"
-          fill="#e3bf98" opacity="0.85"/>
-    ${specks}
+    <!-- liten vinge -->
+    <path d="M132 96 Q140 106 133 116" stroke="${KIWI_OUTLINE}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
 
-    <!-- liten mjuk vinge -->
-    <path d="M58 92 Q78 106 68 124" stroke="${OUTLINE}" stroke-width="${SW}" fill="none" stroke-linecap="round"/>
-
-    ${blushMarkup(68, 134, 92)}
-    ${eyesMarkup(mood, 84, 124, 72)}
     ${kiwiBeakMarkup(mood)}
-    ${accessoryMarkup(level)}
+    <ellipse cx="97" cy="74" rx="7.5" ry="4.5" fill="#ff9eb5" opacity="0.75"/>
+    <ellipse cx="124" cy="74" rx="7.5" ry="4.5" fill="#ff9eb5" opacity="0.75"/>
+    ${kiwiEyesMarkup(mood, 97, 120, 58)}
+    ${accessoryMarkup(level, "kiwi")}
   </svg>`;
 }
 
@@ -600,7 +647,7 @@ function renderFoxSVG(mood, level) {
     <!-- liten rundad nostryne längst ut -->
     <path d="M92 112 Q100 108 108 112 Q106 121 100 122 Q94 121 92 112 Z" fill="#4a3a32"/>
     ${foxMouthMarkup(mood)}
-    ${accessoryMarkup(level)}
+    ${accessoryMarkup(level, "fox")}
   </svg>`;
 }
 
