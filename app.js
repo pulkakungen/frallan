@@ -430,8 +430,8 @@ const ACCESSORY_TIERS = [
   {
     level: 12,
     label: "Solglasögon",
-    offset: { kiwi: [8, -24] },
-    markup: `<g transform="translate(101,74)">
+    offset: { kiwi: [-4, -26] },
+    markup: `<g transform="translate(101,84)">
       <ellipse cx="-20" cy="0" rx="11" ry="9" fill="#4a3f5c"/>
       <ellipse cx="20" cy="0" rx="11" ry="9" fill="#4a3f5c"/>
       <path d="M-9 -2 Q0 -9 9 -2" stroke="#4a3f5c" stroke-width="3" fill="none"/>
@@ -587,65 +587,101 @@ function renderKiwiSVG(mood, level) {
   </svg>`;
 }
 
-function foxMouthMarkup(mood) {
+const FOX_OUTLINE = "#5c3a24";
+const FOX_FUR = "#e8883c";
+const FOX_DARK = "#6e4227";
+const FOX_CREAM = "#fdf3e3";
+const FOX_SW = 3.2;
+
+// Räven har små mörka ögon med en ljusglimt ovanför, precis som i förlagan.
+function foxEyesMarkup(mood, cx1, cx2, cy) {
+  const shine = `
+    <ellipse cx="${cx1 - 2}" cy="${cy - 17}" rx="4.5" ry="6.5" fill="${FOX_CREAM}" transform="rotate(-12 ${cx1 - 2} ${cy - 17})"/>
+    <ellipse cx="${cx2 + 2}" cy="${cy - 17}" rx="4.5" ry="6.5" fill="${FOX_CREAM}" transform="rotate(12 ${cx2 + 2} ${cy - 17})"/>`;
+
+  if (mood === "love") {
+    const heart = (cx) => `
+      <path d="M${cx} ${cy + 7} C${cx - 9} ${cy - 2}, ${cx - 3} ${cy - 11}, ${cx} ${cy - 5}
+               C${cx + 3} ${cy - 11}, ${cx + 9} ${cy - 2}, ${cx} ${cy + 7} Z" fill="#e8455f"/>`;
+    return shine + heart(cx1) + heart(cx2);
+  }
   if (mood === "yum") {
-    return `<ellipse cx="100" cy="128" rx="8" ry="7" fill="#a5445c"/>
-            <ellipse cx="100" cy="130" rx="4.5" ry="3.5" fill="#ff8fa8"/>`;
+    return shine + `
+      <path d="M${cx1 - 7} ${cy + 3} q7 -10 14 0" stroke="${FOX_OUTLINE}" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M${cx2 - 7} ${cy + 3} q7 -10 14 0" stroke="${FOX_OUTLINE}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
   }
   if (mood === "sad") {
-    return `<path d="M91 130 q9 -8 18 0" stroke="${OUTLINE}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+    return `
+      <ellipse cx="${cx1}" cy="${cy}" rx="6" ry="7" fill="${FOX_OUTLINE}"/>
+      <ellipse cx="${cx2}" cy="${cy}" rx="6" ry="7" fill="${FOX_OUTLINE}"/>
+      <path d="M${cx1 - 8} ${cy - 13} q8 -5 15 -1" stroke="${FOX_OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M${cx2 - 7} ${cy - 14} q7 -4 15 1" stroke="${FOX_OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="${cx2 + 7}" cy="${cy + 12}" r="3" fill="#bfe4ff"/>`;
   }
-  return `<path d="M100 124 q-6 9 -12 2 M100 124 q6 9 12 2" stroke="${OUTLINE}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+  return shine + `
+    <ellipse cx="${cx1}" cy="${cy}" rx="6" ry="7.5" fill="${FOX_OUTLINE}"/>
+    <ellipse cx="${cx2}" cy="${cy}" rx="6" ry="7.5" fill="${FOX_OUTLINE}"/>`;
+}
+
+function foxMouthMarkup(mood) {
+  if (mood === "yum") {
+    return `<path d="M88 106 Q100 122 112 106 Z" fill="#c4556a" stroke="${FOX_OUTLINE}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  }
+  if (mood === "sad") {
+    return `<path d="M92 112 q8 -7 16 0" stroke="${FOX_OUTLINE}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  }
+  return `<path d="M100 104 q-6 8 -11 1 M100 104 q6 8 11 1" stroke="${FOX_OUTLINE}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
 }
 
 function renderFoxSVG(mood, level) {
-  // Svansen är ett tjockt streck med runda ändar, så den blir luddig och mjuk.
-  const tailPath = "M128 146 Q172 142 172 110 Q172 88 158 84";
   return `
   <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="100" cy="172" rx="44" ry="6" fill="#000" opacity="0.06"/>
+    <ellipse cx="100" cy="172" rx="42" ry="5" fill="#000" opacity="0.06"/>
 
-    <path d="${tailPath}" stroke="${OUTLINE}" stroke-width="40" fill="none" stroke-linecap="round"/>
-    <path d="${tailPath}" stroke="#ef9f52" stroke-width="35" fill="none" stroke-linecap="round"/>
-    <path d="M166 96 Q172 88 159 84" stroke="#fff8ef" stroke-width="33" fill="none" stroke-linecap="round"/>
+    <!-- luddig svans med ljus spets -->
+    <path d="M124 150 C142 164 164 162 176 148 C190 132 192 106 184 88 C178 74 166 66 156 68
+             C166 84 170 102 166 116 C161 132 148 140 136 141 C129 142 126 145 124 150 Z"
+          fill="${FOX_FUR}" stroke="${FOX_OUTLINE}" stroke-width="${FOX_SW}" stroke-linejoin="round"/>
+    <path d="M184 88 C178 74 166 66 156 68 C164 80 168 92 169 102
+             C174 100 176 96 180 97 C182 92 182 89 184 88 Z"
+          fill="${FOX_CREAM}" stroke="${FOX_OUTLINE}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M170 128 q7 -3 9 -9 M162 140 q8 -2 11 -8" stroke="${FOX_OUTLINE}" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
 
-    <!-- stora rundade öron med mörka toppar -->
-    <path d="M52 58 Q38 20 62 14 Q84 24 88 46 Q68 48 52 58 Z"
-          fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
-    <path d="M62 14 Q44 20 44 36 Q54 26 68 24 Z" fill="#6b5340"/>
-    <path d="M60 50 Q54 30 66 26 Q78 32 78 44 Q68 44 60 50 Z" fill="#ffd2b4"/>
-    <path d="M148 58 Q162 20 138 14 Q116 24 112 46 Q132 48 148 58 Z"
-          fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
-    <path d="M138 14 Q156 20 156 36 Q146 26 132 24 Z" fill="#6b5340"/>
-    <path d="M140 50 Q146 30 134 26 Q122 32 122 44 Q132 44 140 50 Z" fill="#ffd2b4"/>
+    <!-- stora öron med mörka ytterkanter -->
+    <path d="M52 66 C38 42 36 16 54 8 C72 14 82 38 86 60 Z"
+          fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="${FOX_SW}" stroke-linejoin="round"/>
+    <path d="M58 58 C48 38 48 20 59 16 C70 24 77 42 80 57 Z" fill="${FOX_CREAM}"/>
+    <path d="M148 66 C162 42 164 16 146 8 C128 14 118 38 114 60 Z"
+          fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="${FOX_SW}" stroke-linejoin="round"/>
+    <path d="M142 58 C152 38 152 20 141 16 C130 24 123 42 120 57 Z" fill="${FOX_CREAM}"/>
 
-    <!-- kropp med mörka rävstrumpor -->
-    <ellipse cx="100" cy="146" rx="42" ry="27" fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}"/>
-    <ellipse cx="100" cy="152" rx="26" ry="18" fill="#fff8ef"/>
-    <ellipse cx="78" cy="164" rx="13" ry="8" fill="#6b5340" stroke="${OUTLINE}" stroke-width="${SW}"/>
-    <ellipse cx="122" cy="164" rx="13" ry="8" fill="#6b5340" stroke="${OUTLINE}" stroke-width="${SW}"/>
+    <!-- sittande kropp med mörka tassar -->
+    <path d="M100 112 C126 112 142 130 142 148 C142 162 126 168 100 168 C74 168 58 162 58 148 C58 130 74 112 100 112 Z"
+          fill="${FOX_FUR}" stroke="${FOX_OUTLINE}" stroke-width="${FOX_SW}" stroke-linejoin="round"/>
+    <path d="M100 118 C114 118 124 132 124 146 C124 158 114 163 100 163 C86 163 76 158 76 146 C76 132 86 118 100 118 Z"
+          fill="${FOX_CREAM}"/>
+    <ellipse cx="72" cy="162" rx="13" ry="8" fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="2.6"/>
+    <ellipse cx="128" cy="162" rx="13" ry="8" fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="2.6"/>
 
-    <!-- huvud som smalnar av till en lång mjuk nos -->
-    <path d="M100 24
-             C134 24 154 44 154 70
-             C154 84 149 94 140 100
-             C132 105 124 108 117 112
-             C113 122 108 134 100 140
-             C92 134 87 122 83 112
-             C76 108 68 105 60 100
-             C51 94 46 84 46 70
-             C46 44 66 24 100 24 Z"
-          fill="#ef9f52" stroke="${OUTLINE}" stroke-width="${SW}" stroke-linejoin="round"/>
+    <!-- huvud med små pälstoppar -->
+    <path d="M100 26 Q106 18 112 26 Q120 20 124 30 C142 36 154 52 154 72
+             C154 98 132 120 100 120 C68 120 46 98 46 72
+             C46 52 58 36 76 30 Q80 20 88 26 Q94 18 100 26 Z"
+          fill="${FOX_FUR}" stroke="${FOX_OUTLINE}" stroke-width="${FOX_SW}" stroke-linejoin="round"/>
 
-    <!-- vitt nosparti hela vägen ut på nosen -->
-    <path d="M68 98 Q100 114 132 98 Q131 122 113 135 Q100 143 87 135 Q69 122 68 98 Z" fill="#fff8ef"/>
-    <path d="M56 80 Q60 56 78 46 Q64 66 62 86 Z" fill="#fff8ef" opacity="0.3"/>
+    <!-- ljust nosparti över hela nedre ansiktet -->
+    <path d="M48 76 Q62 92 78 88 Q92 84 100 92 Q108 84 122 88 Q138 92 152 76
+             C152 100 130 120 100 120 C70 120 48 100 48 76 Z"
+          fill="${FOX_CREAM}"/>
 
-    ${blushMarkup(64, 136, 92)}
-    ${eyesMarkup(mood, 80, 120, 74)}
+    <!-- streckade kinder -->
+    <path d="M56 92 l11 3 M55 99 l11 2" stroke="#e8705f" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M144 92 l-11 3 M145 99 l-11 2" stroke="#e8705f" stroke-width="2.6" stroke-linecap="round"/>
 
-    <!-- liten rundad nostryne längst ut -->
-    <path d="M92 112 Q100 108 108 112 Q106 121 100 122 Q94 121 92 112 Z" fill="#4a3a32"/>
+    ${foxEyesMarkup(mood, 80, 120, 84)}
+
+    <!-- liten mörk nos -->
+    <path d="M92 94 Q100 90 108 94 Q106 103 100 104 Q94 103 92 94 Z" fill="${FOX_OUTLINE}"/>
     ${foxMouthMarkup(mood)}
     ${accessoryMarkup(level, "fox")}
   </svg>`;
