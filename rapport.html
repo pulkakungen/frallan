@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Frallan, rapport</title>
+<meta name="theme-color" content="#cdeec0" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark: #8ad06b; --orange-dark: #ff8f4a; --ink: #4a4232;
+    --ink-soft: #857a63; --white: #fffdf7; --line: #e8e2d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 60px;
+    font-family: 'Nunito', sans-serif; color: var(--ink);
+    background: linear-gradient(160deg, #f3ffe9 0%, #fff6ec 50%, #eafaff 100%);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-family: 'Baloo 2', cursive; color: var(--orange-dark); margin: 0 0 4px; font-size: 1.9rem; }
+  .lead { color: var(--ink-soft); font-weight: 700; margin: 0 0 20px; }
+  .panel {
+    background: var(--white); border-radius: 20px; padding: 18px;
+    box-shadow: 0 8px 24px rgba(140,160,110,0.2); margin-bottom: 18px;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  select, button, a.btn {
+    font-family: inherit; font-weight: 800; font-size: 0.95rem;
+    padding: 10px 16px; border-radius: 999px; border: 2px solid var(--line);
+    background: #fff; color: var(--ink); cursor: pointer; text-decoration: none;
+  }
+  button.primary, a.btn.primary {
+    background: linear-gradient(135deg, var(--orange-dark), var(--green-dark));
+    color: #fff; border-color: transparent;
+  }
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+  .stat {
+    background: #f7f9ee; border-radius: 14px; padding: 10px 16px; min-width: 120px;
+  }
+  .stat b { display: block; font-size: 1.5rem; font-family: 'Baloo 2', cursive; }
+  .stat span { color: var(--ink-soft); font-weight: 700; font-size: 0.85rem; }
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+  th, td { padding: 7px 9px; border-bottom: 1px solid var(--line); text-align: center; }
+  th { font-weight: 800; color: var(--ink-soft); text-align: left; vertical-align: bottom; }
+  th.task { writing-mode: vertical-rl; transform: rotate(180deg); height: 130px; text-align: left; }
+  td.date, th.date { text-align: left; font-weight: 800; position: sticky; left: 0; background: var(--white); }
+  tr:hover td { background: #f7f9ee; }
+  tr:hover td.date { background: #f7f9ee; }
+  .yes { color: #3ea45e; font-weight: 800; }
+  .no { color: #d96a6a; font-weight: 800; }
+  .na { color: #c9c2b2; }
+  .score { font-weight: 800; }
+  .empty { color: var(--ink-soft); font-weight: 700; padding: 20px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Frallan, rapport</h1>
+  <p class="lead">Så här har det gått med uppgifterna, dag för dag.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <label for="source" style="font-weight:800">Visa:</label>
+      <select id="source">
+        <option value="frallan_state_v1">Olles app</option>
+        <option value="frallan_demo_state_v1">Demoversionen</option>
+      </select>
+      <button id="csv-btn" class="primary">Ladda ner som kalkylark</button>
+      <a class="btn" href="index.html">Tillbaka till appen</a>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="panel">
+    <div class="table-scroll" id="table-wrap"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const WEEKDAYS = ["söndag", "måndag", "tisdag", "onsdag", "torsdag", "fredag", "lördag"];
+
+function loadState(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Kolumnerna byggs från historiken själv, så rapporten fungerar även om
+// uppgiftslistan i appen ändras. Nyaste dagen bestämmer ordningen.
+function columnsFrom(dates, history) {
+  const cols = [];
+  const seen = new Set();
+  [...dates].reverse().forEach((d) => {
+    (history[d].tasks || []).forEach((t) => {
+      if (!seen.has(t.id)) {
+        seen.add(t.id);
+        cols.push({ id: t.id, text: t.text });
+      }
+    });
+  });
+  return cols;
+}
+
+function weekdayOf(dateStr) {
+  return WEEKDAYS[new Date(dateStr + "T12:00:00").getDay()];
+}
+
+function render() {
+  const key = document.getElementById("source").value;
+  const state = loadState(key);
+  const statsEl = document.getElementById("stats");
+  const wrap = document.getElementById("table-wrap");
+
+  if (!state || !state.history || Object.keys(state.history).length === 0) {
+    statsEl.innerHTML = "";
+    wrap.innerHTML = '<p class="empty">Ingen historik än. Den fylls på så fort uppgifter börjar bockas av.</p>';
+    return;
+  }
+
+  const dates = Object.keys(state.history).sort();
+  const cols = columnsFrom(dates, state.history);
+
+  const totalDone = dates.reduce((s, d) => s + (state.history[d].done || 0), 0);
+  const fullDays = dates.filter((d) => state.history[d].allDone).length;
+
+  statsEl.innerHTML = `
+    <div class="stat"><b>${state.petName || "–"}</b><span>${state.petType === "fox" ? "räv" : "kiwifågel"}</span></div>
+    <div class="stat"><b>${state.level}</b><span>nivå</span></div>
+    <div class="stat"><b>${state.streak}</b><span>dagar i rad</span></div>
+    <div class="stat"><b>${totalDone}</b><span>uppgifter klarade</span></div>
+    <div class="stat"><b>${fullDays}</b><span>helt klara dagar</span></div>
+    <div class="stat"><b>${dates.length}</b><span>dagar i rapporten</span></div>
+  `;
+
+  const head =
+    '<tr><th class="date">Datum</th><th>Veckodag</th><th>Klart</th>' +
+    cols.map((c) => `<th class="task">${c.text}</th>`).join("") +
+    "</tr>";
+
+  const body = [...dates].reverse().map((d) => {
+    const rec = state.history[d];
+    const byId = Object.fromEntries((rec.tasks || []).map((t) => [t.id, t]));
+    const cells = cols.map((c) => {
+      const t = byId[c.id];
+      if (!t) return '<td class="na">–</td>';
+      return t.done ? '<td class="yes">✓</td>' : '<td class="no">✗</td>';
+    }).join("");
+    return `<tr><td class="date">${d}</td><td>${weekdayOf(d)}</td><td class="score">${rec.done}/${rec.total}</td>${cells}</tr>`;
+  }).join("");
+
+  wrap.innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+
+function csvEscape(value) {
+  const s = String(value);
+  return /[;,"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function downloadCsv() {
+  const key = document.getElementById("source").value;
+  const state = loadState(key);
+  if (!state || !state.history || Object.keys(state.history).length === 0) {
+    alert("Det finns ingen historik att ladda ner än.");
+    return;
+  }
+  const dates = Object.keys(state.history).sort();
+  const cols = columnsFrom(dates, state.history);
+
+  const rows = [["Datum", "Veckodag", "Klarade", "Totalt", "Allt klart", ...cols.map((c) => c.text)]];
+  dates.forEach((d) => {
+    const rec = state.history[d];
+    const byId = Object.fromEntries((rec.tasks || []).map((t) => [t.id, t]));
+    rows.push([
+      d, weekdayOf(d), rec.done, rec.total, rec.allDone ? "Ja" : "Nej",
+      ...cols.map((c) => (byId[c.id] ? (byId[c.id].done ? "Ja" : "Nej") : "–"))
+    ]);
+  });
+
+  // semikolon och BOM, så svenska Excel öppnar filen rätt direkt
+  const csv = "﻿" + rows.map((r) => r.map(csvEscape).join(";")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "frallan-rapport.csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+document.getElementById("source").addEventListener("change", render);
+document.getElementById("csv-btn").addEventListener("click", downloadCsv);
+if (new URLSearchParams(location.search).get("demo") === "1") {
+  document.getElementById("source").value = "frallan_demo_state_v1";
+}
+render();
+</script>
+</body>
+</html>

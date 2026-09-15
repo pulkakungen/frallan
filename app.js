@@ -221,11 +221,52 @@ function defaultState() {
     completedToday: {},
     rewardedToday: {},
     totalCompleted: 0,
-    sectionsCollapsed: {}
+    sectionsCollapsed: {},
+    history: {}
   };
 }
 
+// Demoläget fyller på med ett färdigt djur och en veckas historik, så appen
+// går att visa upp utan att röra Olles riktiga sparning.
+function seedDemoState() {
+  const s = defaultState();
+  s.petType = "fox";
+  s.petName = "Rufus";
+  s.level = 7;
+  s.xp = 120;
+  s.food = 3;
+  s.love = 3;
+  s.hunger = 72;
+  s.happiness = 88;
+  s.streak = 4;
+  s.totalCompleted = 61;
+  s.lastActiveDate = todayStr();
+  s.lastStatDecayAt = new Date().toISOString();
+
+  const today = new Date();
+  for (let back = 6; back >= 0; back--) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - back);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const tasks = [];
+    TASK_SECTIONS.forEach((section) => {
+      activeTasksForSection(section, d).forEach((t, i) => {
+        // äldre dagar är nästan helt klara, dagens är halvvägs
+        const done = back === 0 ? i % 2 === 0 : back % 4 !== 0 || i % 5 !== 0;
+        tasks.push({ id: t.id, text: t.text, done });
+      });
+    });
+    const done = tasks.filter((t) => t.done).length;
+    s.history[key] = { tasks, done, total: tasks.length, allDone: done === tasks.length };
+    if (back === 0) tasks.forEach((t) => { if (t.done) s.completedToday[t.id] = true; });
+  }
+  return s;
+}
+
 let state = loadState();
+if (DEMO_MODE && !state.petType) {
+  state = seedDemoState();
+  saveState();
+}
 
 function loadState() {
   try {
@@ -239,6 +280,25 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// Historiken är underlaget för rapporten. En post per dag, med alla
+// uppgifter som gällde just den dagen och om de blev gjorda.
+const HISTORY_MAX_DAYS = 400;
+
+function recordToday() {
+  const tasks = [];
+  TASK_SECTIONS.forEach((section) => {
+    activeTasksForSection(section).forEach((t) => {
+      tasks.push({ id: t.id, text: t.text, done: !!state.completedToday[t.id] });
+    });
+  });
+  const done = tasks.filter((t) => t.done).length;
+  state.history[todayStr()] = { tasks, done, total: tasks.length, allDone: tasks.length > 0 && done === tasks.length };
+
+  const dates = Object.keys(state.history).sort();
+  while (dates.length > HISTORY_MAX_DAYS) delete state.history[dates.shift()];
+  saveState();
 }
 
 function handleDailyReset() {
@@ -716,7 +776,7 @@ function checkBabyMilestone() {
 function completeTask(taskId, sectionId) {
   if (state.completedToday[taskId]) {
     delete state.completedToday[taskId];
-    saveState();
+    recordToday();
     renderTaskSections();
     updateStatsUI();
     return;
@@ -786,7 +846,7 @@ function completeTask(taskId, sectionId) {
     }
   }
 
-  saveState();
+  recordToday();
   renderTaskSections();
   updateStatsUI();
 }
@@ -926,6 +986,7 @@ function initAppEvents() {
 function init() {
   handleDailyReset();
   applyStatDecay();
+  if (state.petType) recordToday();
   initAppEvents();
   registerServiceWorker();
 

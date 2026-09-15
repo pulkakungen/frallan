@@ -1,5 +1,5 @@
-const CACHE_NAME = "frallan-v1";
-const CORE_FILES = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json", "./icons/icon-180.png"];
+const CACHE_NAME = "frallan-v2";
+const CORE_FILES = ["./", "./index.html", "./rapport.html", "./style.css", "./app.js", "./manifest.json", "./icons/icon-180.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_FILES)));
