@@ -162,6 +162,7 @@ const GREETING_AFTERNOON = ["Hej igen! 🌳", "Hur går det? 🦊"];
 const GREETING_EVENING = ["God kväll! 🌙", "Snart natt! ✨"];
 
 const LOW_HAPPINESS_BUBBLE = ["Jag vill ha en kram 🤗", "Klappa mig! 🥺"];
+const SLEEP_BUBBLE = ["Zzz... 😴", "God natt! 🌙", "Jag sover nu 💤"];
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -498,6 +499,18 @@ function petSizeScale(level) {
    --------------------------------------------------------- */
 const KIWI_MOOD_POSE = { yum: 18, love: 11, sad: 5 };
 
+const KIWI_POSE_SLEEP = 2;    // sover med nattmössa
+const KIWI_POSE_WONDER = 3;   // frågande, när något fattas
+const KIWI_POSE_TEAR = 5;     // tår, när det fattas mycket
+
+const NIGHT_FROM_HOUR = 21;
+const NIGHT_TO_HOUR = 6;
+
+function isNight(date) {
+  const h = (date === undefined ? new Date() : date).getHours();
+  return h >= NIGHT_FROM_HOUR || h < NIGHT_TO_HOUR;
+}
+
 // Nya poser låses upp varannan nivå och blir kiwins vardagsutseende.
 const KIWI_IDLE_POSES = [
   { level: 1, pose: 13, label: "Kiwi" },
@@ -517,9 +530,23 @@ function kiwiIdlePose(level) {
   return unlocked[unlocked.length - 1] || KIWI_IDLE_POSES[0];
 }
 
+// Ordningen är medveten: en min som just spelas upp går före allt, sedan
+// riktigt dåligt mående, sedan natten, sedan lite dåligt mående, och sist
+// nivåns vanliga pose. Tåren går före natten, annars sover kiwin gott
+// samtidigt som bubblan ber om mat.
 function kiwiPoseNumber(mood, level) {
   if (mood in KIWI_MOOD_POSE) return KIWI_MOOD_POSE[mood];
+  const lowest = Math.min(state.hunger, state.happiness);
+  if (lowest <= 15) return KIWI_POSE_TEAR;
+  if (isNight()) return KIWI_POSE_SLEEP;
+  if (lowest <= 30) return KIWI_POSE_WONDER;
   return kiwiIdlePose(level).pose;
+}
+
+// Sover kiwin just nu? Bubblan ska säga något annat då.
+function kiwiIsSleeping() {
+  return state.petType === "kiwi" && currentMood === "happy" && isNight() &&
+         Math.min(state.hunger, state.happiness) > 15;
 }
 
 function renderKiwiSVG(mood, level) {
@@ -712,6 +739,7 @@ function greetingForNow() {
 
 function updateStatsUI() {
   const cfg = petCfg();
+  updatePetAvatars();
   document.getElementById("pet-name-display").textContent = state.petName;
   document.getElementById("pet-level").textContent = "Nivå " + state.level;
   document.getElementById("hunger-icon").textContent = cfg.foodEmoji;
@@ -734,7 +762,8 @@ function updateStatsUI() {
   document.getElementById("daily-progress-text").textContent = `${doneCount} / ${totalToday}`;
   document.getElementById("daily-progress-fill").style.width = clamp((doneCount / totalToday) * 100, 0, 100) + "%";
 
-  if (state.hunger <= 25) setBubble(pick(cfg.hungryBubbles));
+  if (kiwiIsSleeping()) setBubble(pick(SLEEP_BUBBLE));
+  else if (state.hunger <= 25) setBubble(pick(cfg.hungryBubbles));
   else if (state.happiness <= 25) setBubble(pick(LOW_HAPPINESS_BUBBLE));
 }
 
