@@ -344,164 +344,49 @@ function applyStatDecay() {
 }
 
 /* ---------------------------------------------------------
-   Djur-SVG (kawaii)
+   Båda djuren är riktiga illustrationer, inte ritade i kod.
+   Varje min och varje nivå har sin egen pose ur bildarken.
    --------------------------------------------------------- */
-function eyesMarkup(mood, cx1, cx2, cy) {
-  if (mood === "love") {
-    const heart = (cx) => `
-      <path d="M${cx} ${cy + 6} C${cx - 8} ${cy - 4}, ${cx - 2} ${cy - 12}, ${cx} ${cy - 6}
-               C${cx + 2} ${cy - 12}, ${cx + 8} ${cy - 4}, ${cx} ${cy + 6} Z" fill="#ff6f9c"/>`;
-    return heart(cx1) + heart(cx2);
+const PET_ART = {
+  kiwi: {
+    file: (n) => `djur/kiwi-${String(n).padStart(2, "0")}.svg`,
+    mood: { yum: 18, love: 11 },
+    sleep: 2,
+    wonder: 3,
+    tear: 5,
+    idle: [
+      { level: 1, pose: 13, label: "Kiwi" },
+      { level: 2, pose: 17, label: "Spanaren" },
+      { level: 4, pose: 7, label: "Promenaden" },
+      { level: 6, pose: 0, label: "Springaren" },
+      { level: 8, pose: 9, label: "Vilostunden" },
+      { level: 10, pose: 16, label: "Blomman" },
+      { level: 12, pose: 19, label: "Hatten" },
+      { level: 14, pose: 8, label: "Ballongen" },
+      { level: 16, pose: 12, label: "Brevet" },
+      { level: 18, pose: 15, label: "Viften" }
+    ]
+  },
+  fox: {
+    file: (n) => `djur/rav-${String(n).padStart(2, "0")}.svg`,
+    mood: { yum: 2, love: 16 },
+    sleep: 11,
+    wonder: 15,
+    tear: 4,
+    idle: [
+      { level: 1, pose: 0, label: "Räven" },
+      { level: 2, pose: 13, label: "Spanaren" },
+      { level: 4, pose: 7, label: "Vinkaren" },
+      { level: 6, pose: 5, label: "Promenaden" },
+      { level: 8, pose: 10, label: "Springaren" },
+      { level: 10, pose: 18, label: "Vintermössan" },
+      { level: 12, pose: 12, label: "Trollkarlen" },
+      { level: 14, pose: 14, label: "Ballongen" },
+      { level: 16, pose: 17, label: "Boken" },
+      { level: 18, pose: 6, label: "Kurragömma" }
+    ]
   }
-  if (mood === "sad") {
-    return `
-      <circle cx="${cx1}" cy="${cy}" r="7" fill="#3a2e45"/>
-      <circle cx="${cx2}" cy="${cy}" r="7" fill="#3a2e45"/>
-      <path d="M${cx1 - 6} ${cy - 10} q6 -6 12 0" stroke="#3a2e45" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 6} ${cy - 10} q6 -6 12 0" stroke="#3a2e45" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <circle cx="${cx1 + 3}" cy="${cy + 10}" r="2.5" fill="#bfe4ff"/>
-    `;
-  }
-  if (mood === "yum") {
-    return `
-      <path d="M${cx1 - 9} ${cy + 2} q9 -12 18 0" stroke="#3a2e45" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 9} ${cy + 2} q9 -12 18 0" stroke="#3a2e45" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-    `;
-  }
-  return `
-    <circle cx="${cx1}" cy="${cy}" r="10.5" fill="#4a3a32"/>
-    <circle cx="${cx2}" cy="${cy}" r="10.5" fill="#4a3a32"/>
-    <circle cx="${cx1 - 3.5}" cy="${cy - 3.5}" r="3.4" fill="#fff"/>
-    <circle cx="${cx2 - 3.5}" cy="${cy - 3.5}" r="3.4" fill="#fff"/>
-    <circle cx="${cx1 + 2.5}" cy="${cy + 2.5}" r="1.4" fill="#fff" opacity="0.8"/>
-    <circle cx="${cx2 + 2.5}" cy="${cy + 2.5}" r="1.4" fill="#fff" opacity="0.8"/>
-  `;
-}
-
-function blushMarkup(cx1, cx2, cy) {
-  return `<ellipse cx="${cx1}" cy="${cy}" rx="11" ry="6.5" fill="#ffb4c6" opacity="0.65"/>
-          <ellipse cx="${cx2}" cy="${cy}" rx="11" ry="6.5" fill="#ffb4c6" opacity="0.65"/>`;
-}
-
-// Pynt låses upp varannan nivå och blir kvar. Bara de två senaste visas,
-// annars blir det rörigt på en liten yta.
-const ACCESSORY_TIERS = [
-  {
-    level: 2,
-    label: "Mössa",
-    markup: `<g transform="translate(100,26)">
-      <path d="M-30 6 Q-30 -20 0 -20 Q30 -20 30 6 Z" fill="#ff8f6b"/>
-      <rect x="-33" y="4" width="66" height="9" rx="4.5" fill="#ffd0b8"/>
-      <circle cx="0" cy="-24" r="7" fill="#ffd0b8"/>
-    </g>`
-  },
-  {
-    level: 4,
-    label: "Löv",
-    markup: `<g transform="translate(150,40) rotate(20)">
-      <path d="M0 0 Q16 -10 24 4 Q14 18 0 0 Z" fill="#8ad06b" stroke="#5fb04a" stroke-width="1.5"/>
-      <path d="M2 1 L22 4" stroke="#5fb04a" stroke-width="1.5"/>
-    </g>`
-  },
-  {
-    level: 6,
-    label: "Krona",
-    markup: `<g transform="translate(80,14)">
-      <path d="M0 18 L6 2 L14 14 L20 -2 L26 14 L34 2 L40 18 Z" fill="#ffd93d" stroke="#e0a800" stroke-width="2" stroke-linejoin="round"/>
-      <circle cx="20" cy="4" r="3" fill="#ff6f9c"/>
-    </g>`
-  },
-  {
-    level: 8,
-    label: "Ryggsäck",
-    markup: `<g transform="translate(28,128)">
-      <rect x="-14" y="-12" width="28" height="30" rx="8" fill="#8ad6b0" stroke="#5fb78d" stroke-width="2"/>
-      <rect x="-9" y="2" width="18" height="10" rx="3" fill="#e6fff2"/>
-      <path d="M-8 -12 Q0 -22 8 -12" stroke="#5fb78d" stroke-width="3" fill="none"/>
-    </g>`
-  },
-  {
-    level: 10,
-    label: "Boll",
-    markup: `<g transform="translate(128,164)">
-      <circle cx="0" cy="0" r="13" fill="#fff" stroke="#3a2e45" stroke-width="2"/>
-      <path d="M0 -13 L0 13 M-13 0 L13 0" stroke="#3a2e45" stroke-width="2"/>
-    </g>`
-  },
-  {
-    level: 12,
-    label: "Solglasögon",
-    offset: { kiwi: [-4, -34] },
-    markup: `<g transform="translate(100,92)">
-      <ellipse cx="-20" cy="0" rx="11" ry="9" fill="#4a3f5c"/>
-      <ellipse cx="20" cy="0" rx="11" ry="9" fill="#4a3f5c"/>
-      <path d="M-9 -2 Q0 -9 9 -2" stroke="#4a3f5c" stroke-width="3" fill="none"/>
-      <ellipse cx="-23" cy="-3" rx="3" ry="2" fill="#fff" opacity="0.5"/>
-      <ellipse cx="17" cy="-3" rx="3" ry="2" fill="#fff" opacity="0.5"/>
-    </g>`
-  },
-  {
-    level: 14,
-    label: "Nalle",
-    markup: `<g transform="translate(28,130)">
-      <circle cx="0" cy="6" r="9" fill="#e0b98a"/>
-      <circle cx="-7" cy="-2" r="4" fill="#e0b98a"/>
-      <circle cx="7" cy="-2" r="4" fill="#e0b98a"/>
-      <circle cx="0" cy="16" r="7" fill="#e0b98a"/>
-      <circle cx="-3" cy="5" r="1.2" fill="#3a2e45"/>
-      <circle cx="3" cy="5" r="1.2" fill="#3a2e45"/>
-      <path d="M-2 9 Q0 11 2 9" stroke="#3a2e45" stroke-width="1" fill="none" stroke-linecap="round"/>
-    </g>`
-  },
-  {
-    level: 16,
-    label: "Ballong",
-    markup: `<g transform="translate(28,46)">
-      <ellipse cx="0" cy="0" rx="15" ry="18" fill="#ff8fa8"/>
-      <ellipse cx="-5" cy="-6" rx="4" ry="5" fill="#fff" opacity="0.5"/>
-      <path d="M0 18 L-3 23 L3 23 Z" fill="#e9738e"/>
-      <path d="M0 23 Q7 40 -1 58" stroke="#c9b8a0" stroke-width="2" fill="none"/>
-    </g>`
-  },
-  {
-    level: 18,
-    label: "Stjärnor",
-    markup: `<g fill="#ffe98a">
-      <path d="M58 24 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 Z"/>
-      <path d="M162 30 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5 Z"/>
-      <path d="M176 66 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5 Z"/>
-    </g>`
-  }
-];
-
-function accessoryMarkup(level, type) {
-  const earned = ACCESSORY_TIERS.filter((t) => level >= t.level);
-  return earned
-    .slice(-2)
-    .map((t) => {
-      const off = t.offset && t.offset[type];
-      return off ? `<g transform="translate(${off[0]},${off[1]})">${t.markup}</g>` : t.markup;
-    })
-    .join("");
-}
-
-function petSizeScale(level) {
-  if (level >= 20) return 1.4;
-  if (level >= 14) return 1.28;
-  if (level >= 7) return 1.14;
-  return 1;
-}
-
-
-/* ---------------------------------------------------------
-   Kiwin är riktig illustration, inte ritad i kod.
-   Varje min och varje nivå har sin egen pose ur bildarket.
-   --------------------------------------------------------- */
-const KIWI_MOOD_POSE = { yum: 18, love: 11, sad: 5 };
-
-const KIWI_POSE_SLEEP = 2;    // sover med nattmössa
-const KIWI_POSE_WONDER = 3;   // frågande, när något fattas
-const KIWI_POSE_TEAR = 5;     // tår, när det fattas mycket
+};
 
 const NIGHT_FROM_HOUR = 21;
 const NIGHT_TO_HOUR = 6;
@@ -511,154 +396,45 @@ function isNight(date) {
   return h >= NIGHT_FROM_HOUR || h < NIGHT_TO_HOUR;
 }
 
-// Nya poser låses upp varannan nivå och blir kiwins vardagsutseende.
-const KIWI_IDLE_POSES = [
-  { level: 1, pose: 13, label: "Kiwi" },
-  { level: 2, pose: 17, label: "Spanaren" },
-  { level: 4, pose: 7, label: "Promenaden" },
-  { level: 6, pose: 0, label: "Springaren" },
-  { level: 8, pose: 9, label: "Vilostunden" },
-  { level: 10, pose: 16, label: "Blomman" },
-  { level: 12, pose: 19, label: "Hatten" },
-  { level: 14, pose: 8, label: "Ballongen" },
-  { level: 16, pose: 12, label: "Brevet" },
-  { level: 18, pose: 15, label: "Viften" }
-];
+function artFor(type) {
+  return PET_ART[type] || PET_ART.kiwi;
+}
 
-function kiwiIdlePose(level) {
-  const unlocked = KIWI_IDLE_POSES.filter((p) => level >= p.level);
-  return unlocked[unlocked.length - 1] || KIWI_IDLE_POSES[0];
+// Nya poser låses upp varannan nivå och blir djurets vardagsutseende.
+function idlePose(type, level) {
+  const unlocked = artFor(type).idle.filter((p) => level >= p.level);
+  return unlocked[unlocked.length - 1] || artFor(type).idle[0];
 }
 
 // Ordningen är medveten: en min som just spelas upp går före allt, sedan
 // riktigt dåligt mående, sedan natten, sedan lite dåligt mående, och sist
-// nivåns vanliga pose. Tåren går före natten, annars sover kiwin gott
+// nivåns vanliga pose. Tåren går före natten, annars sover djuret gott
 // samtidigt som bubblan ber om mat.
-function kiwiPoseNumber(mood, level) {
-  if (mood in KIWI_MOOD_POSE) return KIWI_MOOD_POSE[mood];
+function poseNumber(type, mood, level) {
+  const art = artFor(type);
+  if (mood in art.mood) return art.mood[mood];
   const lowest = Math.min(state.hunger, state.happiness);
-  if (lowest <= 15) return KIWI_POSE_TEAR;
-  if (isNight()) return KIWI_POSE_SLEEP;
-  if (lowest <= 30) return KIWI_POSE_WONDER;
-  return kiwiIdlePose(level).pose;
+  if (lowest <= 15) return art.tear;
+  if (isNight()) return art.sleep;
+  if (lowest <= 30) return art.wonder;
+  return idlePose(type, level).pose;
 }
 
-// Sover kiwin just nu? Bubblan ska säga något annat då.
-function kiwiIsSleeping() {
-  return state.petType === "kiwi" && currentMood === "happy" && isNight() &&
-         Math.min(state.hunger, state.happiness) > 15;
+// Sover djuret just nu? Bubblan ska säga något annat då.
+function isSleeping() {
+  return currentMood === "happy" && isNight() && Math.min(state.hunger, state.happiness) > 15;
 }
 
-function renderKiwiSVG(mood, level) {
-  const n = String(kiwiPoseNumber(mood, level)).padStart(2, "0");
-  return `<img class="pet-art" src="djur/kiwi-${n}.svg" alt="" draggable="false">`;
-}
-
-const FOX_OUTLINE = "#5c3a24";
-const FOX_FUR = "#e8883c";
-const FOX_DARK = "#6e4227";
-const FOX_CREAM = "#fdf3e3";
-const FOX_SW = 3.2;
-
-// Räven har små mörka ögon med en ljusglimt ovanför, precis som i förlagan.
-function foxEyesMarkup(mood, cx1, cx2, cy) {
-  const shine = `
-    <ellipse cx="${cx1 - 2}" cy="${cy - 17}" rx="4.5" ry="6.5" fill="${FOX_CREAM}" transform="rotate(-12 ${cx1 - 2} ${cy - 17})"/>
-    <ellipse cx="${cx2 + 2}" cy="${cy - 17}" rx="4.5" ry="6.5" fill="${FOX_CREAM}" transform="rotate(12 ${cx2 + 2} ${cy - 17})"/>`;
-
-  if (mood === "love") {
-    const heart = (cx) => `
-      <path d="M${cx} ${cy + 7} C${cx - 9} ${cy - 2}, ${cx - 3} ${cy - 11}, ${cx} ${cy - 5}
-               C${cx + 3} ${cy - 11}, ${cx + 9} ${cy - 2}, ${cx} ${cy + 7} Z" fill="#e8455f"/>`;
-    return shine + heart(cx1) + heart(cx2);
-  }
-  if (mood === "yum") {
-    return shine + `
-      <path d="M${cx1 - 7} ${cy + 3} q7 -10 14 0" stroke="${FOX_OUTLINE}" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 7} ${cy + 3} q7 -10 14 0" stroke="${FOX_OUTLINE}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
-  }
-  if (mood === "sad") {
-    return `
-      <ellipse cx="${cx1}" cy="${cy}" rx="6" ry="7" fill="${FOX_OUTLINE}"/>
-      <ellipse cx="${cx2}" cy="${cy}" rx="6" ry="7" fill="${FOX_OUTLINE}"/>
-      <path d="M${cx1 - 8} ${cy - 13} q8 -5 15 -1" stroke="${FOX_OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 7} ${cy - 14} q7 -4 15 1" stroke="${FOX_OUTLINE}" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <circle cx="${cx2 + 7}" cy="${cy + 12}" r="3" fill="#bfe4ff"/>`;
-  }
-  return shine + `
-    <ellipse cx="${cx1}" cy="${cy}" rx="6" ry="7.5" fill="${FOX_OUTLINE}"/>
-    <ellipse cx="${cx2}" cy="${cy}" rx="6" ry="7.5" fill="${FOX_OUTLINE}"/>`;
-}
-
-function foxMouthMarkup(mood) {
-  if (mood === "yum") {
-    return `<path d="M88 113 Q100 129 112 113 Z" fill="#c4556a" stroke="${FOX_OUTLINE}" stroke-width="2.4" stroke-linejoin="round"/>`;
-  }
-  if (mood === "sad") {
-    return `<path d="M92 119 q8 -7 16 0" stroke="${FOX_OUTLINE}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-  }
-  return `<path d="M100 111 q-6 8 -11 1 M100 111 q6 8 11 1" stroke="${FOX_OUTLINE}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
-}
-
-function renderFoxSVG(mood, level) {
-  return `
-  <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="100" cy="174" rx="40" ry="5" fill="#000" opacity="0.06"/>
-
-    <!-- stor yvig svans, nästan lika stor som kroppen -->
-    <path d="M126 152 Q140 170 154 168 Q170 172 180 158 Q194 148 192 130 Q198 114 191 98
-             Q192 80 177 68 Q170 61 163 64 Q176 82 177 100 Q179 121 169 136
-             Q158 150 142 149 Q131 148 126 152 Z"
-          fill="${FOX_FUR}" stroke="${FOX_OUTLINE}" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M163 64 Q177 70 186 88 Q193 102 191 114 Q184 116 181 106 Q174 82 160 74 Z"
-          fill="${FOX_CREAM}" stroke="${FOX_OUTLINE}" stroke-width="3" stroke-linejoin="round"/>
-
-    <!-- stora öron med mörka ytterkanter -->
-    <path d="M46 64 Q30 34 34 10 Q36 0 46 4 Q68 16 80 54 Z"
-          fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M52 56 Q42 34 44 18 Q60 28 70 52 Z" fill="${FOX_CREAM}"/>
-    <path d="M154 64 Q170 34 166 10 Q164 0 154 4 Q132 16 120 54 Z"
-          fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M148 56 Q158 34 156 18 Q140 28 130 52 Z" fill="${FOX_CREAM}"/>
-
-    <!-- liten kropp med mörka tassar -->
-    <path d="M100 116 Q128 116 134 142 Q138 166 100 166 Q62 166 66 142 Q72 116 100 116 Z"
-          fill="${FOX_FUR}" stroke="${FOX_OUTLINE}" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M100 122 Q118 122 122 142 Q124 160 100 160 Q76 160 78 142 Q82 122 100 122 Z"
-          fill="${FOX_CREAM}"/>
-    <ellipse cx="76" cy="160" rx="12" ry="7.5" fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="3"/>
-    <ellipse cx="124" cy="160" rx="12" ry="7.5" fill="${FOX_DARK}" stroke="${FOX_OUTLINE}" stroke-width="3"/>
-
-    <!-- stort huvud med pälstoppar och luddiga kinder -->
-    <path d="M100 22 Q108 12 116 22 Q128 16 132 30
-             Q152 38 162 58 Q170 76 164 94
-             Q160 106 152 108 Q146 118 136 114
-             Q126 124 114 118 Q100 126 86 118
-             Q74 124 64 114 Q54 118 48 108
-             Q40 106 36 94 Q30 76 38 58
-             Q48 38 68 30 Q72 16 84 22 Q92 12 100 22 Z"
-          fill="${FOX_FUR}" stroke="${FOX_OUTLINE}" stroke-width="4" stroke-linejoin="round"/>
-
-    <!-- ljust nosparti över nedre ansiktet -->
-    <path d="M38 78 Q54 96 72 90 Q88 84 100 94 Q112 84 128 90 Q146 96 162 78
-             Q166 96 152 108 Q146 118 136 114 Q126 124 114 118 Q100 126 86 118
-             Q74 124 64 114 Q54 118 48 108 Q34 96 38 78 Z"
-          fill="${FOX_CREAM}"/>
-
-    <!-- kindstreck -->
-    <path d="M44 92 l12 4 M43 100 l12 3" stroke="#e8705f" stroke-width="3" stroke-linecap="round"/>
-    <path d="M156 92 l-12 4 M157 100 l-12 3" stroke="#e8705f" stroke-width="3" stroke-linecap="round"/>
-
-    ${foxEyesMarkup(mood, 78, 122, 92)}
-
-    <path d="M91 100 Q100 95 109 100 Q107 110 100 111 Q93 110 91 100 Z" fill="${FOX_OUTLINE}"/>
-    ${foxMouthMarkup(mood)}
-    ${accessoryMarkup(level, "fox")}
-  </svg>`;
+function petSizeScale(level) {
+  if (level >= 20) return 1.4;
+  if (level >= 14) return 1.28;
+  if (level >= 7) return 1.14;
+  return 1;
 }
 
 function petSVG(type, mood, level) {
-  return type === "fox" ? renderFoxSVG(mood, level) : renderKiwiSVG(mood, level);
+  const art = artFor(type);
+  return `<img class="pet-art" src="${art.file(poseNumber(type, mood, level))}" alt="" draggable="false">`;
 }
 
 let currentMood = "happy";
@@ -762,7 +538,7 @@ function updateStatsUI() {
   document.getElementById("daily-progress-text").textContent = `${doneCount} / ${totalToday}`;
   document.getElementById("daily-progress-fill").style.width = clamp((doneCount / totalToday) * 100, 0, 100) + "%";
 
-  if (kiwiIsSleeping()) setBubble(pick(SLEEP_BUBBLE));
+  if (isSleeping()) setBubble(pick(SLEEP_BUBBLE));
   else if (state.hunger <= 25) setBubble(pick(cfg.hungryBubbles));
   else if (state.happiness <= 25) setBubble(pick(LOW_HAPPINESS_BUBBLE));
 }
@@ -884,10 +660,9 @@ function completeTask(taskId, sectionId) {
         burstConfetti(30);
       }, 350);
 
-      const newAccessory =
-        state.petType === "kiwi"
-          ? KIWI_IDLE_POSES.find((t) => t.level > levelBefore && t.level <= state.level)
-          : ACCESSORY_TIERS.find((t) => t.level > levelBefore && t.level <= state.level);
+      const newAccessory = artFor(state.petType).idle.find(
+        (t) => t.level > levelBefore && t.level <= state.level
+      );
       const newSizeTier = [7, 14, 20].find((l) => l > levelBefore && l <= state.level);
       let extraDelay = 900;
       if (newAccessory) {
