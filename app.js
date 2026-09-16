@@ -82,6 +82,7 @@ const TASK_SECTIONS = [
       { id: "tvatt", emoji: "🧺", text: "Tvätt i korgen" },
       { id: "besticken", emoji: "🍴", text: "Töm besticken" },
       { id: "duka", emoji: "🍽️", text: "Duka" },
+      { id: "duka-undan", emoji: "🧽", text: "Duka undan" },
       { id: "laslaxa", emoji: "📖", text: "Gör läsläxan" },
       { id: "lordagsgodis", emoji: "🍬", text: "Handla lördagsgodis", days: [DAG_LOR] }
     ]
