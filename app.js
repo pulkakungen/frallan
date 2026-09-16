@@ -328,7 +328,7 @@ function handleDailyReset() {
   saveState();
 }
 
-const HUNGER_DECAY_PER_HOUR = 4;
+const HUNGER_DECAY_PER_HOUR = 6;
 const HAPPINESS_DECAY_PER_HOUR = 3;
 
 // Hunger och humör sjunker med verklig förfluten tid, inte en gång per dygn.
