@@ -74,7 +74,7 @@ const TASK_SECTIONS = [
     emoji: "🌤️",
     title: "Eftermiddag",
     tasks: [
-      { id: "gaby", emoji: "🧸", text: "Plocka Gabys saker" },
+      { id: "gaby", emoji: "🧸", text: "Gullisar och Gaby" },
       { id: "lego", emoji: "🧱", text: "Ta undan lego" },
       { id: "magneter", emoji: "🧲", text: "Ta undan magneter" },
       { id: "bilar", emoji: "🚗", text: "Ta undan bilarna" },
@@ -213,9 +213,12 @@ function defaultState() {
     hunger: 80,
     happiness: 80,
     lastStatDecayAt: null,
+    hasEgg: false,
+    eggFoundAt: null,
+    eggStageSeen: 0,
     hasBaby: false,
     babyName: "",
-    babyLevel: 20,
+    eggLevel: 30,
     streak: 0,
     lastActiveDate: null,
     completedToday: {},
@@ -592,14 +595,50 @@ function renderAll() {
 }
 
 /* ---------------------------------------------------------
-   Unge: dyker upp på nivå 20 och stannar kvar.
-   Inga val och ingen text att läsa, bara något gulligt att se.
+   Ägget: dyker upp på nivå 30. Det spricker lite mer för varje dygn och
+   kläcks på tredje dagen. Inga val och ingen text att läsa, bara något
+   gulligt att gå och vänta på.
    --------------------------------------------------------- */
 const BABY_NAMES = { kiwi: "Lillkiwi", fox: "Lillräv" };
+
+const EGG_HATCH_DAYS = 3;
+
+// 0 = helt ägg, 1 och 2 = fler och fler sprickor, 3 = dags att kläckas.
+function eggStage() {
+  if (!state.eggFoundAt) return 0;
+  const days = (Date.now() - new Date(state.eggFoundAt).getTime()) / 86400000;
+  return clamp(Math.floor(days), 0, EGG_HATCH_DAYS);
+}
+
+function eggSVG(stage) {
+  const cracks = [
+    '<path d="M38 66 l10 -9 -6 -10 9 -8" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    '<path d="M62 92 l11 -7 -4 -11 12 -6" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    '<path d="M30 96 l12 5 2 12" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+  ];
+  return `
+  <svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="132" rx="26" ry="4" fill="#000" opacity="0.07"/>
+    <path d="M50 12 C72 12 86 48 86 78 C86 108 70 126 50 126 C30 126 14 108 14 78 C14 48 28 12 50 12 Z"
+          fill="#fdf3e3" stroke="#8a6a4a" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="38" cy="52" rx="6" ry="4" fill="#e8d3b4"/>
+    <ellipse cx="62" cy="72" rx="7" ry="5" fill="#e8d3b4"/>
+    <ellipse cx="44" cy="96" rx="5" ry="4" fill="#e8d3b4"/>
+    ${cracks.slice(0, stage).join("")}
+  </svg>`;
+}
 
 function renderBabyAvatar() {
   const wrap = document.getElementById("baby-avatar-wrap");
   if (!wrap) return;
+
+  if (state.hasEgg) {
+    const stage = eggStage();
+    wrap.hidden = false;
+    document.getElementById("baby-avatar").innerHTML = eggSVG(stage);
+    document.getElementById("baby-name-tag").textContent = stage === 0 ? "Ägg 🥚" : "Spricker!";
+    return;
+  }
   if (!state.hasBaby) {
     wrap.hidden = true;
     return;
@@ -609,14 +648,44 @@ function renderBabyAvatar() {
   document.getElementById("baby-name-tag").textContent = state.babyName;
 }
 
-function checkBabyMilestone() {
-  if (state.hasBaby || state.level < state.babyLevel) return;
+function hatchEgg() {
+  state.hasEgg = false;
   state.hasBaby = true;
   state.babyName = BABY_NAMES[state.petType] || "Lillen";
   saveState();
   renderBabyAvatar();
-  showToast("En liten unge kom! 🍼", true);
-  burstConfetti(30);
+  showToast("Ägget kläcktes! 🐣", true);
+  burstConfetti(50);
+}
+
+// Körs vid varje start och vid varje ny nivå: lägger ägget, visar nya
+// sprickor en gång var, och kläcker när tiden är inne.
+function checkEggAndBaby() {
+  if (!state.hasEgg && !state.hasBaby && state.level >= state.eggLevel) {
+    state.hasEgg = true;
+    state.eggFoundAt = new Date().toISOString();
+    state.eggStageSeen = 0;
+    saveState();
+    renderBabyAvatar();
+    showToast("Ett ägg! 🥚", true);
+    burstConfetti(30);
+    return;
+  }
+
+  if (!state.hasEgg) return;
+
+  const stage = eggStage();
+  if (stage >= EGG_HATCH_DAYS) {
+    hatchEgg();
+    return;
+  }
+  if (stage > state.eggStageSeen) {
+    state.eggStageSeen = stage;
+    saveState();
+    renderBabyAvatar();
+    showToast("Ägget spricker! 🥚", true);
+    burstConfetti(20);
+  }
 }
 
 /* ---------------------------------------------------------
@@ -679,7 +748,7 @@ function completeTask(taskId, sectionId) {
         }, extraDelay);
       }
 
-      checkBabyMilestone();
+      checkEggAndBaby();
     }
 
     const section = TASK_SECTIONS.find((s) => s.id === sectionId);
@@ -793,7 +862,7 @@ function showAppScreen() {
   document.getElementById("screen-start").classList.remove("active");
   document.getElementById("screen-app").classList.add("active");
   renderAll();
-  checkBabyMilestone();
+  checkEggAndBaby();
 }
 
 /* ---------------------------------------------------------
