@@ -601,9 +601,9 @@ function renderAll() {
    --------------------------------------------------------- */
 const BABY_NAMES = { kiwi: "Lillkiwi", fox: "Lillräv" };
 
-const EGG_HATCH_DAYS = 3;
+const EGG_HATCH_DAYS = 6;
 
-// 0 = helt ägg, 1 och 2 = fler och fler sprickor, 3 = dags att kläckas.
+// 0 = helt ägg, 1 till 5 = en ny spricka för varje dygn, 6 = dags att kläckas.
 function eggStage() {
   if (!state.eggFoundAt) return 0;
   const days = (Date.now() - new Date(state.eggFoundAt).getTime()) / 86400000;
@@ -611,10 +611,14 @@ function eggStage() {
 }
 
 function eggSVG(stage) {
+  const crack = (d) =>
+    `<path d="${d}" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
   const cracks = [
-    '<path d="M38 66 l10 -9 -6 -10 9 -8" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-    '<path d="M62 92 l11 -7 -4 -11 12 -6" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-    '<path d="M30 96 l12 5 2 12" stroke="#8a6a4a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    crack("M40 60 l9 -8 -5 -9 8 -7"),
+    crack("M62 88 l10 -7 -4 -10 11 -6"),
+    crack("M28 92 l11 5 2 11 10 4"),
+    crack("M52 34 l-8 8 7 8 -6 7"),
+    crack("M70 110 l-10 3 -3 10 -9 4")
   ];
   return `
   <svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg">
@@ -632,11 +636,12 @@ function renderBabyAvatar() {
   const wrap = document.getElementById("baby-avatar-wrap");
   if (!wrap) return;
 
+  const tag = document.getElementById("baby-name-tag");
+
   if (state.hasEgg) {
-    const stage = eggStage();
     wrap.hidden = false;
-    document.getElementById("baby-avatar").innerHTML = eggSVG(stage);
-    document.getElementById("baby-name-tag").textContent = stage === 0 ? "Ägg 🥚" : "Spricker!";
+    document.getElementById("baby-avatar").innerHTML = eggSVG(eggStage());
+    tag.hidden = true;
     return;
   }
   if (!state.hasBaby) {
@@ -645,7 +650,8 @@ function renderBabyAvatar() {
   }
   wrap.hidden = false;
   document.getElementById("baby-avatar").innerHTML = petSVG(state.petType, "happy", 1);
-  document.getElementById("baby-name-tag").textContent = state.babyName;
+  tag.hidden = false;
+  tag.textContent = state.babyName;
 }
 
 function hatchEgg() {
