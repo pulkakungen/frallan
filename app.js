@@ -128,10 +128,23 @@ function totalTasksToday() {
 }
 
 const XP_PER_TASK = 10;
-const FOOD_PER_TASK = 1;
-const LOVE_PER_TASK = 1;
 const MAX_FOOD = 4;
 const MAX_LOVE = 4;
+
+// Varje uppgift ger antingen mat eller kärlek, inte båda. Gav den båda nådde
+// lagret taket på nolltid och knapparna slutade betyda något. Fördelningen
+// varvas jämnt över listan och är låst till uppgiftens id, så samma uppgift
+// ger alltid samma sak.
+const TASK_REWARD = {};
+TASK_SECTIONS.forEach((section) => {
+  section.tasks.forEach((task, i) => {
+    TASK_REWARD[task.id] = i % 2 === 0 ? "food" : "love";
+  });
+});
+
+function rewardForTask(taskId) {
+  return TASK_REWARD[taskId] === "love" ? "love" : "food";
+}
 
 // Snabbare nivåer än i Sassibrass: en sjuåring behöver se att det händer saker.
 function xpToNext(level) {
@@ -713,8 +726,9 @@ function completeTask(taskId, sectionId) {
   if (!state.rewardedToday[taskId]) {
     state.rewardedToday[taskId] = true;
     state.xp += XP_PER_TASK;
-    state.food = clamp(state.food + FOOD_PER_TASK, 0, MAX_FOOD);
-    state.love = clamp(state.love + LOVE_PER_TASK, 0, MAX_LOVE);
+    const reward = rewardForTask(taskId);
+    if (reward === "food") state.food = clamp(state.food + 1, 0, MAX_FOOD);
+    else state.love = clamp(state.love + 1, 0, MAX_LOVE);
     state.totalCompleted += 1;
 
     const levelBefore = state.level;
@@ -729,7 +743,8 @@ function completeTask(taskId, sectionId) {
 
     showToast(pick(TASK_MESSAGES));
     burstConfetti(14);
-    flashMood("love", 900);
+    flashMood(reward === "food" ? "yum" : "love", 900);
+    floatEmojiFromPet(reward === "food" ? petCfg().foodEmoji : "💚");
 
     if (leveledUp) {
       setTimeout(() => {
@@ -789,7 +804,7 @@ function feedPet() {
   if (state.food <= 0) return;
   const cfg = petCfg();
   state.food -= 1;
-  state.hunger = clamp(state.hunger + 20, 0, 100);
+  state.hunger = clamp(state.hunger + 12, 0, 100);
   saveState();
   updateStatsUI();
   floatEmojiFromPet(cfg.foodEmoji);
