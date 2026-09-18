@@ -4,7 +4,7 @@ compatibility_date = "2026-01-01"
 
 # Skapas med: npx wrangler kv namespace create PUSH_KV
 kv_namespaces = [
-  { binding = "PUSH_KV", id = "ERSATT_MED_EGET_KV_ID" }
+  { binding = "PUSH_KV", id = "b89b9792d4c94699824c7d06b7a28cf0" }
 ]
 
 # Hemlighet, samma som de andra apparna:
