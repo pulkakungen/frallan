@@ -118,8 +118,72 @@ function isTaskActiveOnDate(task, date) {
 }
 function activeTasksForSection(section, date) {
   const d = date === undefined ? new Date() : date;
-  return section.tasks.filter((t) => isTaskActiveOnDate(t, d));
+  return section.tasks.filter((t) => isTaskActiveOnDate(t, d)).concat(extrasForSection(section.id, d));
 }
+/* ---------------------------------------------------------
+   Servern: dagens läge skickas upp, engångsuppgifter hämtas ner
+   --------------------------------------------------------- */
+const PUSH_WORKER_URL = "https://frallan-push.bella-sassibrass.workers.dev";
+const EXTRA_STORAGE = "frallan_extra_v1";
+let extraTasks = [];
+
+function loadExtras() {
+  try {
+    const raw = localStorage.getItem(EXTRA_STORAGE);
+    const list = raw ? JSON.parse(raw) : [];
+    extraTasks = Array.isArray(list) ? list : [];
+  } catch (e) {
+    extraTasks = [];
+  }
+}
+
+function extrasForSection(sectionId, date) {
+  const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return extraTasks.filter((t) => (t.section || "eftermiddag") === sectionId && t.date === key);
+}
+
+async function fetchExtras() {
+  try {
+    const res = await fetch(PUSH_WORKER_URL + "/extra?date=" + todayStr());
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data.tasks)) return;
+    extraTasks = data.tasks;
+    localStorage.setItem(EXTRA_STORAGE, JSON.stringify(extraTasks));
+    if (state.petType) {
+      renderTaskSections();
+      updateStatsUI();
+    }
+  } catch (e) {
+    // ingen uppkoppling, de sparade får duga
+  }
+}
+
+// Skickar dagens läge så föräldrapanelen kan visa det. Misslyckas det gör
+// det ingenting, appen fungerar precis lika bra utan.
+function syncStateToWorker() {
+  if (!state.petType) return;
+  const tasks = [];
+  TASK_SECTIONS.forEach((section) => {
+    activeTasksForSection(section).forEach((t) => {
+      tasks.push({ id: t.id, text: t.text, done: !!state.completedToday[t.id] });
+    });
+  });
+  fetch(PUSH_WORKER_URL + "/sync", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      allDoneToday: tasks.length > 0 && tasks.every((t) => t.done),
+      tasks,
+      hunger: state.hunger,
+      happiness: state.happiness,
+      level: state.level,
+      streak: state.streak,
+      petName: state.petName
+    })
+  }).catch(() => {});
+}
+
 function totalTasksForDate(date) {
   return TASK_SECTIONS.reduce((s, sec) => s + activeTasksForSection(sec, date).length, 0);
 }
@@ -317,6 +381,7 @@ function recordToday() {
   const dates = Object.keys(state.history).sort();
   while (dates.length > HISTORY_MAX_DAYS) delete state.history[dates.shift()];
   saveState();
+  syncStateToWorker();
 }
 
 function handleDailyReset() {
@@ -927,11 +992,22 @@ function initAppEvents() {
    Init
    --------------------------------------------------------- */
 function init() {
+  loadExtras();
   handleDailyReset();
   applyStatDecay();
   if (state.petType) recordToday();
   initAppEvents();
   registerServiceWorker();
+  fetchExtras();
+  syncStateToWorker();
+
+  // hämta om när appen kommer fram igen, så nya extrauppgifter dyker upp
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      fetchExtras();
+      syncStateToWorker();
+    }
+  });
 
   if (state.petType) {
     showAppScreen();

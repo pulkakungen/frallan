@@ -1,0 +1,11 @@
+name = "frallan-push"
+main = "src/worker.js"
+compatibility_date = "2026-01-01"
+
+# Skapas med: npx wrangler kv namespace create PUSH_KV
+kv_namespaces = [
+  { binding = "PUSH_KV", id = "ERSATT_MED_EGET_KV_ID" }
+]
+
+# Hemlighet, samma som de andra apparna:
+#   ADMIN_TOKEN   (skyddar /admin och /report)
