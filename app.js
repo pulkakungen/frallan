@@ -199,8 +199,11 @@ function totalTasksToday() {
 }
 
 const XP_PER_TASK = 10;
-const MAX_FOOD = 4;
-const MAX_LOVE = 4;
+// Lagret rymmer ett dygns behov. Åtta matningar ger 96 hungerpoäng och ett
+// vaket dygn kostar 90, så inget han tjänar in går till spillo bara för att
+// han bockar av en hel sektion innan han matar.
+const MAX_FOOD = 8;
+const MAX_LOVE = 8;
 
 // Varje uppgift ger antingen mat eller kärlek, inte båda. Gav den båda nådde
 // lagret taket på nolltid och knapparna slutade betyda något. Fördelningen
