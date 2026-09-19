@@ -1036,10 +1036,24 @@ function initAppEvents() {
 /* ---------------------------------------------------------
    Init
    --------------------------------------------------------- */
-// Föräldrapåfyllning: öppna appen med ?fyll=1 så fylls hunger, humör och
-// lagret till max en gång. Parametern plockas bort ur adressen direkt, så en
-// omladdning inte fyller på igen och Olle inte blir kvar på en länk som ger
-// honom fullt varje gång han öppnar appen.
+// Föräldrapåfyllning. Två vägar in, för en app som ligger på hemskärmen har
+// egen lagring skild från webbläsarens: en länk som öppnas i webbläsaren når
+// alltså inte den kopia Olle använder. Därför finns påfyllningen också inuti
+// appen, bakom ett långt tryck på nivåbrickan som han inte råkar göra.
+function topUp() {
+  state.hunger = 100;
+  state.happiness = 100;
+  state.food = MAX_FOOD;
+  state.love = MAX_LOVE;
+  state.lastStatDecayAt = new Date().toISOString();
+  saveState();
+  updateStatsUI();
+  showToast("Påfyllt! 🍀", true);
+  burstConfetti(30);
+}
+
+// Öppna appen med ?fyll=1 så fylls allt en gång. Parametern plockas bort ur
+// adressen direkt, så en omladdning inte fyller på igen.
 function applyTopUp() {
   const params = new URLSearchParams(location.search);
   if (params.get("fyll") !== "1") return;
@@ -1048,16 +1062,30 @@ function applyTopUp() {
   const rest = params.toString();
   history.replaceState(null, "", location.pathname + (rest ? "?" + rest : ""));
 
-  if (!state.petType) return;
+  if (state.petType) topUp();
+}
 
-  state.hunger = 100;
-  state.happiness = 100;
-  state.food = MAX_FOOD;
-  state.love = MAX_LOVE;
-  state.lastStatDecayAt = new Date().toISOString();
-  saveState();
-  showToast("Påfyllt! 🍀", true);
-  burstConfetti(30);
+const TOP_UP_HOLD_MS = 1500;
+
+function initTopUpHold() {
+  const badge = document.getElementById("pet-level");
+  if (!badge) return;
+  let timer = null;
+  const avbryt = () => {
+    clearTimeout(timer);
+    timer = null;
+    badge.classList.remove("holding");
+  };
+  badge.addEventListener("pointerdown", () => {
+    badge.classList.add("holding");
+    timer = setTimeout(() => {
+      avbryt();
+      if (confirm("Fylla på mat och kramar?")) topUp();
+    }, TOP_UP_HOLD_MS);
+  });
+  ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach((e) =>
+    badge.addEventListener(e, avbryt)
+  );
 }
 
 function init() {
@@ -1067,6 +1095,7 @@ function init() {
   applyTopUp();
   if (state.petType) recordToday();
   initAppEvents();
+  initTopUpHold();
   registerServiceWorker();
   fetchExtras();
   syncStateToWorker();

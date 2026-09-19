@@ -246,6 +246,13 @@ button {
   border-radius: 999px;
   flex-shrink: 0;
 }
+/* Visar att ett långt tryck på nivåbrickan håller på att göra något. */
+.pet-level.holding {
+  transform: scale(0.92);
+  opacity: 0.7;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
 .stat-bar {
   display: flex;
   align-items: center;
