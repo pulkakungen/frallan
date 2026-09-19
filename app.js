@@ -100,7 +100,7 @@ const TASK_SECTIONS = [
     tasks: [
       { id: "duscha", emoji: "🚿", text: "Duscha", days: [DAG_ONS, DAG_FRE] },
       { id: "tander-kvall", emoji: "🪥", text: "Borsta tänder" },
-      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan", days: utom(DAG_LOR) },
+      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan", days: utom(DAG_FRE, DAG_LOR) },
       { id: "saga", emoji: "📚", text: "Läs en saga" },
       { id: "sova", emoji: "😴", text: "Sova gott" }
     ]
