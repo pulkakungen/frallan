@@ -206,10 +206,20 @@ const MAX_LOVE = 4;
 // lagret taket på nolltid och knapparna slutade betyda något. Fördelningen
 // varvas jämnt över listan och är låst till uppgiftens id, så samma uppgift
 // ger alltid samma sak.
+// Morgonen lutar mot mat. Djuret har svultit hela natten, och på lördag och
+// söndag finns bara fem morgonuppgifter att tjäna på, eftersom frukt, väska
+// och skola faller bort. Mönstret ger fyra mat de dagarna, vilket är precis
+// vad lagret rymmer, och fem på en vardag.
+const REWARD_PATTERN = {
+  morgon: ["food", "love", "food", "food", "food", "love", "food", "love", "food"]
+};
+
 const TASK_REWARD = {};
 TASK_SECTIONS.forEach((section) => {
+  const pattern = REWARD_PATTERN[section.id];
   section.tasks.forEach((task, i) => {
-    TASK_REWARD[task.id] = i % 2 === 0 ? "food" : "love";
+    const fromPattern = pattern && pattern[i];
+    TASK_REWARD[task.id] = fromPattern || (i % 2 === 0 ? "food" : "love");
   });
 });
 
