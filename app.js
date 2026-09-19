@@ -1065,27 +1065,41 @@ function applyTopUp() {
   if (state.petType) topUp();
 }
 
-const TOP_UP_HOLD_MS = 1500;
+// Fem snabba tryck på nivåbrickan. Ett långt tryck lät smidigare men fungerar
+// dåligt med finger: pekskärmen skickar små rörelser hela tiden, och webbläsaren
+// lägger sig i med markering och långtrycksmeny. Tryck är entydiga.
+const TOP_UP_TAPS = 5;
+const TOP_UP_WINDOW_MS = 3000;
 
-function initTopUpHold() {
+function initTopUpTaps() {
   const badge = document.getElementById("pet-level");
   if (!badge) return;
+
+  let taps = 0;
   let timer = null;
-  const avbryt = () => {
+
+  badge.addEventListener("click", () => {
+    taps += 1;
     clearTimeout(timer);
-    timer = null;
-    badge.classList.remove("holding");
-  };
-  badge.addEventListener("pointerdown", () => {
-    badge.classList.add("holding");
-    timer = setTimeout(() => {
-      avbryt();
+
+    // liten puff som kvitto, och tydligare ju närmare man kommer
+    badge.classList.remove("tapped");
+    void badge.offsetWidth;
+    badge.classList.add("tapped");
+    if (taps >= 3) badge.textContent = "Nivå " + state.level + " " + "•".repeat(taps - 2);
+
+    if (taps >= TOP_UP_TAPS) {
+      taps = 0;
+      updateStatsUI();
       if (confirm("Fylla på mat och kramar?")) topUp();
-    }, TOP_UP_HOLD_MS);
+      return;
+    }
+
+    timer = setTimeout(() => {
+      taps = 0;
+      updateStatsUI();
+    }, TOP_UP_WINDOW_MS);
   });
-  ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach((e) =>
-    badge.addEventListener(e, avbryt)
-  );
 }
 
 function init() {
@@ -1095,7 +1109,7 @@ function init() {
   applyTopUp();
   if (state.petType) recordToday();
   initAppEvents();
-  initTopUpHold();
+  initTopUpTaps();
   registerServiceWorker();
   fetchExtras();
   syncStateToWorker();

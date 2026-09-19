@@ -246,11 +246,29 @@ button {
   border-radius: 999px;
   flex-shrink: 0;
 }
-/* Visar att ett långt tryck på nivåbrickan håller på att göra något. */
-.pet-level.holding {
-  transform: scale(0.92);
-  opacity: 0.7;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+/* Nivåbrickan är också föräldrarnas påfyllningsknapp, fem snabba tryck.
+   Den behöver därför vara tryckbar utan att webbläsaren markerar text
+   eller öppnar långtrycksmenyn. */
+.pet-level {
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+/* Brickan är liten att läsa men ska vara lätt att pricka med ett finger,
+   så tryckytan växer utan att layouten rör sig. */
+.pet-level::after {
+  content: "";
+  position: absolute;
+  inset: -13px -11px;
+}
+.pet-level.tapped { animation: badge-tap 0.25s ease; }
+@keyframes badge-tap {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
 }
 
 .stat-bar {
