@@ -52,6 +52,12 @@ function petCfg() {
 // days: veckodagar (0=söndag ... 6=lördag). Ingen lista = varje dag.
 const DAG_MAN = 1, DAG_TIS = 2, DAG_ONS = 3, DAG_TORS = 4, DAG_FRE = 5, DAG_LOR = 6, DAG_SON = 0;
 const VARDAGAR = [DAG_MAN, DAG_TIS, DAG_ONS, DAG_TORS, DAG_FRE];
+const ALLA_DAGAR = [DAG_SON, DAG_MAN, DAG_TIS, DAG_ONS, DAG_TORS, DAG_FRE, DAG_LOR];
+
+// Läsbarare än att räkna upp sex veckodagar för hand.
+function utom(...dagar) {
+  return ALLA_DAGAR.filter((d) => !dagar.includes(d));
+}
 
 const TASK_SECTIONS = [
   {
@@ -64,7 +70,7 @@ const TASK_SECTIONS = [
       { id: "frukost", emoji: "🥣", text: "Ät frukost" },
       { id: "plocka-frukost", emoji: "🧽", text: "Plocka undan frukosten" },
       { id: "tander-morgon", emoji: "🪥", text: "Borsta tänder" },
-      { id: "frukt", emoji: "🍎", text: "Packa frukt" },
+      { id: "frukt", emoji: "🍎", text: "Packa frukt", days: utom(DAG_LOR) },
       { id: "gympa", emoji: "🩳", text: "Ta med gympakläder", days: [DAG_TIS, DAG_TORS] },
       { id: "vaska", emoji: "🎒", text: "Ta väskan" },
       { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR }
@@ -83,7 +89,7 @@ const TASK_SECTIONS = [
       { id: "besticken", emoji: "🍴", text: "Töm besticken" },
       { id: "duka", emoji: "🍽️", text: "Duka" },
       { id: "duka-undan", emoji: "🧽", text: "Duka undan" },
-      { id: "laslaxa", emoji: "📖", text: "Gör läsläxan" },
+      { id: "laslaxa", emoji: "📖", text: "Gör läsläxan", days: utom(DAG_FRE) },
       { id: "lordagsgodis", emoji: "🍬", text: "Handla lördagsgodis", days: [DAG_LOR] }
     ]
   },
@@ -94,7 +100,7 @@ const TASK_SECTIONS = [
     tasks: [
       { id: "duscha", emoji: "🚿", text: "Duscha", days: [DAG_ONS, DAG_FRE] },
       { id: "tander-kvall", emoji: "🪥", text: "Borsta tänder" },
-      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan" },
+      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan", days: utom(DAG_LOR) },
       { id: "saga", emoji: "📚", text: "Läs en saga" },
       { id: "sova", emoji: "😴", text: "Sova gott" }
     ]
