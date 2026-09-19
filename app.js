@@ -72,7 +72,7 @@ const TASK_SECTIONS = [
       { id: "tander-morgon", emoji: "🪥", text: "Borsta tänder" },
       { id: "frukt", emoji: "🍎", text: "Packa frukt", days: utom(DAG_LOR, DAG_SON) },
       { id: "gympa", emoji: "🩳", text: "Ta med gympakläder", days: [DAG_TIS, DAG_TORS] },
-      { id: "vaska", emoji: "🎒", text: "Ta väskan" },
+      { id: "vaska", emoji: "🎒", text: "Ta väskan", days: VARDAGAR },
       { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR }
     ]
   },
