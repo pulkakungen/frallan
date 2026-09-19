@@ -426,7 +426,28 @@ function handleDailyReset() {
 const HUNGER_DECAY_PER_HOUR = 6;
 const HAPPINESS_DECAY_PER_HOUR = 3;
 
-// Hunger och humör sjunker med verklig förfluten tid, inte en gång per dygn.
+// Timmar mellan två tidpunkter då djuret var vaket. Nätter räknas bort dag
+// för dag, så uträkningen stämmer även om appen varit stängd länge.
+function awakeHoursBetween(from, to) {
+  if (to <= from) return 0;
+  let awake = 0;
+  const dag = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  for (let i = 0; i < 400 && dag <= to; i++) {
+    const vaknar = new Date(dag);
+    vaknar.setHours(NIGHT_TO_HOUR, 0, 0, 0);
+    const somnar = new Date(dag);
+    somnar.setHours(NIGHT_FROM_HOUR, 0, 0, 0);
+    const start = Math.max(from.getTime(), vaknar.getTime());
+    const slut = Math.min(to.getTime(), somnar.getTime());
+    if (slut > start) awake += (slut - start) / (60 * 60 * 1000);
+    dag.setDate(dag.getDate() + 1);
+  }
+  return awake;
+}
+
+// Hunger och humör sjunker med verklig förfluten tid, men bara medan djuret
+// är vaket. Ett sovande djur blir inte hungrigt, och utan den regeln gick
+// dygnet back på helgerna: uppgifterna räckte inte till nattens förbrukning.
 function applyStatDecay() {
   const now = new Date();
   if (!state.lastStatDecayAt) {
@@ -434,8 +455,12 @@ function applyStatDecay() {
     saveState();
     return;
   }
-  const hoursElapsed = (now - new Date(state.lastStatDecayAt)) / (60 * 60 * 1000);
-  if (hoursElapsed < 0.1) return;
+  const hoursElapsed = awakeHoursBetween(new Date(state.lastStatDecayAt), now);
+  if (hoursElapsed < 0.1) {
+    state.lastStatDecayAt = now.toISOString();
+    saveState();
+    return;
+  }
 
   state.hunger = Math.round(clamp(state.hunger - hoursElapsed * HUNGER_DECAY_PER_HOUR, 10, 100));
   state.happiness = Math.round(clamp(state.happiness - hoursElapsed * HAPPINESS_DECAY_PER_HOUR, 10, 100));
