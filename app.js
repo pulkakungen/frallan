@@ -1036,10 +1036,35 @@ function initAppEvents() {
 /* ---------------------------------------------------------
    Init
    --------------------------------------------------------- */
+// Föräldrapåfyllning: öppna appen med ?fyll=1 så fylls hunger, humör och
+// lagret till max en gång. Parametern plockas bort ur adressen direkt, så en
+// omladdning inte fyller på igen och Olle inte blir kvar på en länk som ger
+// honom fullt varje gång han öppnar appen.
+function applyTopUp() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("fyll") !== "1") return;
+
+  params.delete("fyll");
+  const rest = params.toString();
+  history.replaceState(null, "", location.pathname + (rest ? "?" + rest : ""));
+
+  if (!state.petType) return;
+
+  state.hunger = 100;
+  state.happiness = 100;
+  state.food = MAX_FOOD;
+  state.love = MAX_LOVE;
+  state.lastStatDecayAt = new Date().toISOString();
+  saveState();
+  showToast("Påfyllt! 🍀", true);
+  burstConfetti(30);
+}
+
 function init() {
   loadExtras();
   handleDailyReset();
   applyStatDecay();
+  applyTopUp();
   if (state.petType) recordToday();
   initAppEvents();
   registerServiceWorker();
