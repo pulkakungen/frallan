@@ -1052,17 +1052,31 @@ function topUp() {
   burstConfetti(30);
 }
 
-// Öppna appen med ?fyll=1 så fylls allt en gång. Parametern plockas bort ur
-// adressen direkt, så en omladdning inte fyller på igen.
-function applyTopUp() {
+// Öppna appen med ?fyll=1 för att fylla lagret, och ?niva=2 för att sätta
+// nivån. Erfarenheten rörs inte, så mätaren står kvar där den var.
+// Parametrarna plockas bort ur adressen direkt, så en omladdning inte gör om
+// det och han inte blir kvar på en länk som ändrar läget varje gång.
+function applyUrlActions() {
   const params = new URLSearchParams(location.search);
-  if (params.get("fyll") !== "1") return;
+  const fyll = params.get("fyll") === "1";
+  const niva = parseInt(params.get("niva"), 10);
+  const bytNiva = Number.isFinite(niva) && niva >= 1 && niva <= 99;
+  if (!fyll && !bytNiva) return;
 
   params.delete("fyll");
+  params.delete("niva");
   const rest = params.toString();
   history.replaceState(null, "", location.pathname + (rest ? "?" + rest : ""));
 
-  if (state.petType) topUp();
+  if (!state.petType) return;
+
+  if (bytNiva) {
+    state.level = niva;
+    saveState();
+    showToast("Nivå " + niva + "! 🌟", true);
+  }
+  if (fyll) topUp();
+  else updateStatsUI();
 }
 
 // Fem snabba tryck på nivåbrickan. Ett långt tryck lät smidigare men fungerar
@@ -1106,7 +1120,7 @@ function init() {
   loadExtras();
   handleDailyReset();
   applyStatDecay();
-  applyTopUp();
+  applyUrlActions();
   if (state.petType) recordToday();
   initAppEvents();
   initTopUpTaps();
