@@ -95,6 +95,14 @@ const TASK_SECTIONS = [
     ]
   },
   {
+    // Tom från början. Hit hamnar engångsuppgifterna från föräldrapanelen,
+    // och sektionen visas bara de dagar det faktiskt ligger något i den.
+    id: "hemma",
+    emoji: "🏠",
+    title: "Hemma",
+    tasks: []
+  },
+  {
     id: "kvall",
     emoji: "🌙",
     title: "Kväll",
@@ -145,9 +153,9 @@ function loadExtras() {
 }
 
 // Panelen känner inte till den här appens sektioner, så allt som inte
-// matchar en riktig sektion hamnar på eftermiddagen i stället för att
-// tyst försvinna.
-const EXTRA_DEFAULT_SECTION = "eftermiddag";
+// matchar en riktig sektion hamnar under Hemma i stället för att tyst
+// försvinna.
+const EXTRA_DEFAULT_SECTION = "hemma";
 
 function extraSectionId(task) {
   return TASK_SECTIONS.some((sec) => sec.id === task.section) ? task.section : EXTRA_DEFAULT_SECTION;
@@ -235,7 +243,15 @@ TASK_SECTIONS.forEach((section) => {
   });
 });
 
+// Engångsuppgifter bär med sig sitt eget val från panelen: mat, kärlek
+// eller båda. Vanliga uppgifter följer mönstret ovan.
 function rewardForTask(taskId) {
+  const extra = extraTasks.find((t) => t.id === taskId);
+  if (extra) {
+    if (extra.gives === "love") return "love";
+    if (extra.gives === "both") return "both";
+    return "food";
+  }
   return TASK_REWARD[taskId] === "love" ? "love" : "food";
 }
 
@@ -846,8 +862,8 @@ function completeTask(taskId, sectionId) {
     state.rewardedToday[taskId] = true;
     state.xp += XP_PER_TASK;
     const reward = rewardForTask(taskId);
-    if (reward === "food") state.food = clamp(state.food + 1, 0, MAX_FOOD);
-    else state.love = clamp(state.love + 1, 0, MAX_LOVE);
+    if (reward === "food" || reward === "both") state.food = clamp(state.food + 1, 0, MAX_FOOD);
+    if (reward === "love" || reward === "both") state.love = clamp(state.love + 1, 0, MAX_LOVE);
     state.totalCompleted += 1;
 
     const levelBefore = state.level;
@@ -862,8 +878,8 @@ function completeTask(taskId, sectionId) {
 
     showToast(pick(TASK_MESSAGES));
     burstConfetti(14);
-    flashMood(reward === "food" ? "yum" : "love", 900);
-    floatEmojiFromPet(reward === "food" ? petCfg().foodEmoji : "💚");
+    flashMood(reward === "love" ? "love" : "yum", 900);
+    floatEmojiFromPet(reward === "love" ? "💚" : petCfg().foodEmoji);
 
     if (leveledUp) {
       setTimeout(() => {

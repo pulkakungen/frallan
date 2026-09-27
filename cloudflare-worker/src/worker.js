@@ -255,7 +255,7 @@ export default {
         emoji: (body.emoji || "⭐").slice(0, 4),
         text: innehall.slice(0, 80),
         reward: ["food", "love", "both"].includes(body.gives) ? body.gives : "both",
-        section: body.section || "eftermiddag",
+        section: body.section || "hemma",
         date: dateStr
       };
       list.push(task);
