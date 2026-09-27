@@ -144,9 +144,18 @@ function loadExtras() {
   }
 }
 
+// Panelen känner inte till den här appens sektioner, så allt som inte
+// matchar en riktig sektion hamnar på eftermiddagen i stället för att
+// tyst försvinna.
+const EXTRA_DEFAULT_SECTION = "eftermiddag";
+
+function extraSectionId(task) {
+  return TASK_SECTIONS.some((sec) => sec.id === task.section) ? task.section : EXTRA_DEFAULT_SECTION;
+}
+
 function extrasForSection(sectionId, date) {
   const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  return extraTasks.filter((t) => (t.section || "eftermiddag") === sectionId && t.date === key);
+  return extraTasks.filter((t) => extraSectionId(t) === sectionId && t.date === key);
 }
 
 async function fetchExtras() {
