@@ -208,6 +208,70 @@ function syncStateToWorker() {
   }).catch(() => {});
 }
 
+/* ---------------------------------------------------------
+   Synk mellan Olles enheter
+   --------------------------------------------------------- */
+// Hela spelläget ligger hos workern. Enheten med den senaste ändringen
+// vinner: varje sparning stämplas med klockslag, och både appen och servern
+// vägrar ta emot ett äldre läge. Demoläget synkar aldrig, det ska inte röra
+// den riktiga sparningen.
+let adopterarFjarrlage = false;
+let pushTimer = null;
+
+const PUSH_DELAY_MS = 900;
+
+// Nycklar som hör till enheten och inte ska resa med. Resten speglas.
+const LOKALA_NYCKLAR = ["lastStatDecayAt", "sectionsCollapsed"];
+
+function lageAttSkicka() {
+  const kopia = Object.assign({}, state);
+  LOKALA_NYCKLAR.forEach((k) => delete kopia[k]);
+  return kopia;
+}
+
+function pushaLage() {
+  if (DEMO_MODE || !state.petType || adopterarFjarrlage) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    fetch(PUSH_WORKER_URL + "/state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lageAttSkicka())
+    }).catch(() => {});
+  }, PUSH_DELAY_MS);
+}
+
+// Hämtar hem det senaste läget och tar över det om det är nyare än vårt.
+// Lokala nycklar lämnas orörda, så den här enhetens hunger inte hoppar
+// bakåt bara för att en annan enhet var öppen nyss.
+async function hamtaLage() {
+  if (DEMO_MODE) return;
+  try {
+    const res = await fetch(PUSH_WORKER_URL + "/state");
+    if (!res.ok) return;
+    const fjarr = await res.json();
+    if (!fjarr || typeof fjarr.updatedAt !== "string") return;
+    if (state.updatedAt && fjarr.updatedAt <= state.updatedAt) return;
+
+    adopterarFjarrlage = true;
+    const lokalt = {};
+    LOKALA_NYCKLAR.forEach((k) => (lokalt[k] = state[k]));
+    state = Object.assign(defaultState(), fjarr, lokalt);
+    saveState();
+    adopterarFjarrlage = false;
+
+    if (state.petType) {
+      handleDailyReset();
+      applyStatDecay();
+      recordToday();
+      renderAll();
+      checkEggAndBaby();
+    }
+  } catch (e) {
+    // ingen uppkoppling, det sparade läget får duga
+  }
+}
+
 function totalTasksForDate(date) {
   return TASK_SECTIONS.reduce((s, sec) => s + activeTasksForSection(sec, date).length, 0);
 }
@@ -349,7 +413,8 @@ function defaultState() {
     rewardedToday: {},
     totalCompleted: 0,
     sectionsCollapsed: {},
-    history: {}
+    history: {},
+    updatedAt: null
   };
 }
 
@@ -406,7 +471,9 @@ function loadState() {
 }
 
 function saveState() {
+  if (!adopterarFjarrlage) state.updatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  pushaLage();
 }
 
 // Historiken är underlaget för rapporten. En post per dag, med alla
@@ -1141,21 +1208,36 @@ function initTopUpTaps() {
   });
 }
 
-function init() {
+const HAMTNING_TIMEOUT_MS = 2500;
+
+async function init() {
   loadExtras();
+  initAppEvents();
+  initTopUpTaps();
+  registerServiceWorker();
+
+  // Hämta hem det delade läget innan dagens nollställning. Gör vi tvärtom
+  // nollställer en enhet som varit stängd över natten sitt eget gamla läge,
+  // stämplar det som nytt och skriver över de andras framsteg. Appen får
+  // aldrig fastna på det här, så en långsam uppkoppling ger upp efter en
+  // stund och det sparade läget används.
+  await Promise.race([
+    hamtaLage(),
+    new Promise((klar) => setTimeout(klar, HAMTNING_TIMEOUT_MS))
+  ]);
+
   handleDailyReset();
   applyStatDecay();
   applyUrlActions();
   if (state.petType) recordToday();
-  initAppEvents();
-  initTopUpTaps();
-  registerServiceWorker();
   fetchExtras();
   syncStateToWorker();
 
-  // hämta om när appen kommer fram igen, så nya extrauppgifter dyker upp
+  // hämta om när appen kommer fram igen, så den tar vid där en annan enhet
+  // slutade och nya extrauppgifter dyker upp
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
+      hamtaLage();
       fetchExtras();
       syncStateToWorker();
     }

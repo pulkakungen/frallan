@@ -14,6 +14,7 @@ const CORS_HEADERS = {
 
 const SUBSCRIPTION_KEY = "subscription";
 const STATE_KEY = "state";
+const GAME_KEY = "game";
 const HISTORY_PREFIX = "history:";
 const EXTRA_PREFIX = "extra:";
 
@@ -227,6 +228,28 @@ export default {
         updatedAt: new Date().toISOString()
       });
       return json({ ok: true });
+    }
+
+    // Hela spelläget, delat mellan Olles enheter. Enheten med den senaste
+    // ändringen vinner. Servern vägrar ta emot ett äldre läge, så en telefon
+    // som legat offline kan inte skriva över nyare framsteg från en annan.
+    if (path === "/state" && request.method === "GET") {
+      const raw = await env.PUSH_KV.get(GAME_KEY);
+      return json(raw ? JSON.parse(raw) : null);
+    }
+
+    if (path === "/state" && request.method === "POST") {
+      const inkommande = await request.json().catch(() => null);
+      if (!inkommande || typeof inkommande !== "object" || typeof inkommande.updatedAt !== "string") {
+        return json({ ok: false, error: "saknar updatedAt" }, 400);
+      }
+      const raw = await env.PUSH_KV.get(GAME_KEY);
+      const nuvarande = raw ? JSON.parse(raw) : null;
+      if (nuvarande && typeof nuvarande.updatedAt === "string" && inkommande.updatedAt <= nuvarande.updatedAt) {
+        return json({ ok: true, behöll: true, state: nuvarande });
+      }
+      await env.PUSH_KV.put(GAME_KEY, JSON.stringify(inkommande));
+      return json({ ok: true, state: inkommande });
     }
 
     if (path === "/extra" && request.method === "GET") {
