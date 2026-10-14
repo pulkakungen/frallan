@@ -307,14 +307,14 @@ TASK_SECTIONS.forEach((section) => {
   });
 });
 
-// Engångsuppgifter bär med sig sitt eget val från panelen: mat, kärlek
-// eller båda. Vanliga uppgifter följer mönstret ovan.
+// Engångsuppgifter bär med sig sitt eget val från panelen: mat, kärlek,
+// båda eller ingenting. Workern kallar fältet reward, panelen gives, så
+// vi tittar efter båda. Vanliga uppgifter följer mönstret ovan.
 function rewardForTask(taskId) {
   const extra = extraTasks.find((t) => t.id === taskId);
   if (extra) {
-    if (extra.gives === "love") return "love";
-    if (extra.gives === "both") return "both";
-    return "food";
+    const valt = extra.reward || extra.gives;
+    return ["love", "both", "none"].includes(valt) ? valt : "food";
   }
   return TASK_REWARD[taskId] === "love" ? "love" : "food";
 }
@@ -927,8 +927,8 @@ function completeTask(taskId, sectionId) {
 
   if (!state.rewardedToday[taskId]) {
     state.rewardedToday[taskId] = true;
-    state.xp += XP_PER_TASK;
     const reward = rewardForTask(taskId);
+    if (reward !== "none") state.xp += XP_PER_TASK;
     if (reward === "food" || reward === "both") state.food = clamp(state.food + 1, 0, MAX_FOOD);
     if (reward === "love" || reward === "both") state.love = clamp(state.love + 1, 0, MAX_LOVE);
     state.totalCompleted += 1;
@@ -944,9 +944,11 @@ function completeTask(taskId, sectionId) {
     }
 
     showToast(pick(TASK_MESSAGES));
-    burstConfetti(14);
-    flashMood(reward === "love" ? "love" : "yum", 900);
-    floatEmojiFromPet(reward === "love" ? "💚" : petCfg().foodEmoji);
+    if (reward !== "none") {
+      burstConfetti(14);
+      flashMood(reward === "love" ? "love" : "yum", 900);
+      floatEmojiFromPet(reward === "love" ? "💚" : petCfg().foodEmoji);
+    }
 
     if (leveledUp) {
       setTimeout(() => {
