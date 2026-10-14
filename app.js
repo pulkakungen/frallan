@@ -185,6 +185,47 @@ async function fetchExtras() {
 
 // Skickar dagens läge så föräldrapanelen kan visa det. Misslyckas det gör
 // det ingenting, appen fungerar precis lika bra utan.
+/* ---------------------------------------------------------
+   Hela uppgiftslistan till föräldrapanelen. Räknas fyra veckor
+   framåt, så både jämna och udda veckor och varannan dag syns.
+   --------------------------------------------------------- */
+const VECKODAG_KORT = ["sön", "mån", "tis", "ons", "tor", "fre", "lör"];
+
+function scheduleSummary() {
+  const start = new Date();
+  const rader = [];
+  TASK_SECTIONS.forEach((section) => {
+    section.tasks.forEach((task) => {
+      const traffar = {};
+      let totalt = 0;
+      for (let i = 0; i < 28; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        if (!isTaskActiveOnDate(task, d)) continue;
+        traffar[d.getDay()] = (traffar[d.getDay()] || 0) + 1;
+        totalt += 1;
+      }
+      if (!totalt) return;
+
+      const dagar = Object.keys(traffar)
+        .map(Number)
+        .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+
+      let nar;
+      if (task.date) nar = task.date;
+      else if (dagar.length === 7 && totalt >= 26) nar = "varje dag";
+      else if (dagar.length === 7) nar = "varannan dag";
+      else {
+        const varannanVecka = dagar.every((d) => traffar[d] <= 2);
+        nar = dagar.map((d) => VECKODAG_KORT[d]).join(" ") + (varannanVecka ? " (varannan vecka)" : "");
+      }
+
+      rader.push({ section: section.title, text: task.text, when: nar, reward: rewardForTask(task.id) });
+    });
+  });
+  return rader;
+}
+
 function syncStateToWorker() {
   if (!state.petType) return;
   const tasks = [];
@@ -203,7 +244,8 @@ function syncStateToWorker() {
       happiness: state.happiness,
       level: state.level,
       streak: state.streak,
-      petName: state.petName
+      petName: state.petName,
+      schedule: scheduleSummary()
     })
   }).catch(() => {});
 }

@@ -132,6 +132,7 @@ async function buildSummary(env) {
     totalToday: tasks.length,
     tasks,
     remindersSentToday: [],
+    schedule: state && Array.isArray(state.schedule) ? state.schedule : null,
     supportsExtra: true,
     extra: await readExtras(env, dateStr),
     affirmation: null,
@@ -219,7 +220,8 @@ export default {
           happiness: typeof body.happiness === "number" ? body.happiness : null,
           level: typeof body.level === "number" ? body.level : null,
           streak: typeof body.streak === "number" ? body.streak : null,
-          petName: typeof body.petName === "string" ? body.petName : null
+          petName: typeof body.petName === "string" ? body.petName : null,
+          schedule: Array.isArray(body.schedule) ? body.schedule.slice(0, 120) : null
         })
       );
       await mergeHistory(env, dateStr, {
