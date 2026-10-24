@@ -644,3 +644,15 @@ button {
   .pet-avatar-big { width: 128px; height: 128px; }
   .task-label { font-size: 1.15rem; }
 }
+
+/* Versionsstämpel, så det går att se vilken version en telefon faktiskt kör
+   utan att gissa om cachen hänger kvar. */
+.app-version {
+  max-width: 640px;
+  margin: 10px auto 0;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  opacity: 0.5;
+}

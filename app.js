@@ -7,17 +7,39 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
+const APP_VERSION = "v13 (24 okt, ritat spöke)";
+
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
 
+// Registrerar service workern och tar emot nya versioner direkt. Utan det
+// kunde en telefon bli kvar på en gammal version hur länge som helst: den
+// installerade appen stängs sällan helt, och först då byttes den ut.
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    return await navigator.serviceWorker.register("sw.js");
+    const reg = await navigator.serviceWorker.register("sw.js");
+
+    // Den nya workern hoppar över kön, så när den tar över laddar vi om en
+    // gång och är då på senaste versionen.
+    let laddarOm = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (laddarOm) return;
+      laddarOm = true;
+      location.reload();
+    });
+
+    reg.update().catch(() => {});
+    // och leta efter nya versioner varje gång appen kommer fram igen
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) reg.update().catch(() => {});
+    });
+    return reg;
   } catch (e) {
     return null;
   }
 }
+
 
 /* ---------------------------------------------------------
    Djuren
@@ -1338,6 +1360,9 @@ async function init() {
       syncStateToWorker();
     }
   });
+
+  const vEl = document.getElementById("app-version");
+  if (vEl) vEl.textContent = APP_VERSION;
 
   if (state.petType) {
     showAppScreen();
