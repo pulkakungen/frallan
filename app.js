@@ -456,6 +456,7 @@ function defaultState() {
     totalCompleted: 0,
     sectionsCollapsed: {},
     halloween: "auto",
+    halloweenSatt: null,
     history: {},
     updatedAt: null
   };
@@ -705,147 +706,34 @@ const HALLOWEEN_TILL = { manad: 11, dag: 1 };  // till och med 1 november
 
 function arHalloween(date) {
   const d = date === undefined ? new Date() : date;
-  if (state.halloween === "on") return true;
-  if (state.halloween === "off") return false;
+  // Ett manuellt val gäller bara dagen ut. Annars skulle ett ?halloween=1
+  // sitta kvar i telefonen för evigt och djuret aldrig bli sig likt igen.
+  const manuellt = state.halloweenSatt === todayStr() ? state.halloween : "auto";
+  if (manuellt === "on") return true;
+  if (manuellt === "off") return false;
   const m = d.getMonth() + 1, dag = d.getDate();
   if (m === HALLOWEEN_FRAN.manad && dag >= HALLOWEEN_FRAN.dag) return true;
   if (m === HALLOWEEN_TILL.manad && dag <= HALLOWEEN_TILL.dag) return true;
   return false;
 }
 
-const LAKAN_LJUS = "#ffffff";
-const LAKAN_MORK = "#e6dfcf";
-const LAKAN_VECK = "#d9d0bc";
-const LAKAN_KANT = "#5c4636";
-const HAL = "#352b26";
+// Halloweenbilden är ritad, inte genererad. Mina egna försök att rita ett
+// lakan blev aldrig bra, så kiwin bär den teckning som skickades in. Räven
+// har ingen än och går därför som vanligt.
+const SPOKBILD = {
+  kiwi: "djur/kiwi-halloween.png"
+};
 
-// Varje spöke behöver eget id på sin toning, annars delar alla på den första.
-let spokeNr = 0;
-
-// Lakanet får en svag toning och ett par veck, annars ser det ut som papper
-// istället för tyg.
-function lakanToning(id) {
-  return `<defs>
-    <linearGradient id="${id}" x1="0.15" y1="0" x2="0.85" y2="1">
-      <stop offset="0" stop-color="${LAKAN_LJUS}"/>
-      <stop offset="0.55" stop-color="#faf6ec"/>
-      <stop offset="1" stop-color="${LAKAN_MORK}"/>
-    </linearGradient>
-  </defs>`;
+function harSpokbild(type) {
+  return !!SPOKBILD[type];
 }
 
-function kinder(cx1, cx2, cy) {
-  return `<ellipse cx="${cx1}" cy="${cy}" rx="11" ry="6" fill="#ffb4c6" opacity="0.5"/>
-          <ellipse cx="${cx2}" cy="${cy}" rx="11" ry="6" fill="#ffb4c6" opacity="0.5"/>`;
-}
-
-// Ögonhålen följer samma miner som djuren annars har. De är hål i tyg, så
-// de får en mjuk inre skugga istället för att vara platta klickar.
-function ghostOgon(mood, cx1, cx2, cy) {
-  if (mood === "love") {
-    const hjarta = (cx) => `
-      <path d="M${cx} ${cy + 10} C${cx - 14} ${cy - 4}, ${cx - 4} ${cy - 17}, ${cx} ${cy - 7}
-               C${cx + 4} ${cy - 17}, ${cx + 14} ${cy - 4}, ${cx} ${cy + 10} Z" fill="#e8455f"/>`;
-    return hjarta(cx1) + hjarta(cx2);
-  }
-  if (mood === "yum") {
-    return `
-      <path d="M${cx1 - 12} ${cy + 5} q12 -17 24 0" stroke="${HAL}" stroke-width="6" fill="none" stroke-linecap="round"/>
-      <path d="M${cx2 - 12} ${cy + 5} q12 -17 24 0" stroke="${HAL}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
-  }
-  const hal = (cx, ry) => `
-    <ellipse cx="${cx}" cy="${cy}" rx="10" ry="${ry}" fill="${HAL}"/>
-    <ellipse cx="${cx}" cy="${cy - ry + 3}" rx="7" ry="3" fill="#000" opacity="0.35"/>
-    <ellipse cx="${cx - 3}" cy="${cy + 3}" rx="3" ry="4" fill="#fff" opacity="0.18"/>`;
-  if (mood === "sad") {
-    return hal(cx1, 11) + hal(cx2, 11) +
-      `<circle cx="${cx2 + 13}" cy="${cy + 17}" r="4" fill="#bfe4ff"/>`;
-  }
-  return hal(cx1, 13) + hal(cx2, 13);
-}
-
-// Ett hål i tyget: mörk öppning med en ljus kant där tyget är uppvikt.
-function tygHal(cx, cy, rx, ry, vinkel) {
-  return `<g transform="rotate(${vinkel} ${cx} ${cy})">
-    <ellipse cx="${cx}" cy="${cy}" rx="${rx + 2}" ry="${ry + 2}" fill="${LAKAN_VECK}"/>
-    <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${HAL}"/>
-  </g>`;
-}
-
-// Hemmet: bucklor av lite olika bredd, så det inte blir en mekanisk våg.
-const HEM_KIWI = "q-12 19 -25 1 q-13 18 -25 2 q-12 19 -25 0 q-13 18 -25 1 q-12 18 -24 -1";
-const HEM_RAV  = "q-13 18 -26 1 q-12 19 -25 2 q-13 18 -25 0 q-12 19 -25 1 q-13 18 -24 -1";
-
-function kiwiGhost(mood) {
-  const id = "lakan" + ++spokeNr;
-  return `
-  <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    ${lakanToning(id)}
-    <ellipse cx="100" cy="172" rx="42" ry="6" fill="#000" opacity="0.08"/>
-
-    <path d="M94 142 L88 162 M114 142 L120 162" stroke="${LAKAN_KANT}" stroke-width="8" stroke-linecap="round"/>
-    <path d="M94 142 L88 162 M114 142 L120 162" stroke="#e8b273" stroke-width="5" stroke-linecap="round"/>
-    <path d="M80 164 L96 164 M112 164 L128 164" stroke="${LAKAN_KANT}" stroke-width="8" stroke-linecap="round"/>
-    <path d="M80 164 L96 164 M112 164 L128 164" stroke="#e8b273" stroke-width="5" stroke-linecap="round"/>
-
-    <path d="M38 102 C38 52 64 22 100 22 C136 22 162 52 162 102 L162 132 ${HEM_KIWI} Z"
-          fill="url(#${id})" stroke="${LAKAN_KANT}" stroke-width="3.5" stroke-linejoin="round"/>
-
-    <path d="M150 60 C160 78 162 98 160 128 L162 132 q-12 18 -24 1 C148 104 152 76 150 60 Z"
-          fill="${LAKAN_MORK}" opacity="0.55"/>
-    <path d="M58 56 Q50 80 52 112" stroke="${LAKAN_VECK}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
-
-    ${kinder(62, 140, 100)}
-    ${ghostOgon(mood, 90, 128, 76)}
-
-    ${tygHal(74, 104, 12, 9, -16)}
-    <path d="M76 99 L26 127 Q20 131 27 133 L82 115 Z"
-          fill="#e8b273" stroke="${LAKAN_KANT}" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M46 123 l7 -5" stroke="${LAKAN_KANT}" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`;
-}
-
-function foxGhost(mood) {
-  const id = "lakan" + ++spokeNr;
-  return `
-  <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg">
-    ${lakanToning(id)}
-    <ellipse cx="100" cy="172" rx="46" ry="6" fill="#000" opacity="0.08"/>
-
-    <path d="M158 126 C182 128 192 144 188 160 Q172 170 160 152 Q154 140 152 132 Z"
-          fill="url(#${id})" stroke="${LAKAN_KANT}" stroke-width="3.5" stroke-linejoin="round"/>
-
-    <path d="M38 104
-             C38 72 48 48 62 36
-             L54 10 Q52 2 60 6 L90 28
-             C96 26 104 26 110 28
-             L140 6 Q148 2 146 10 L138 36
-             C152 48 162 72 162 104
-             L162 132 ${HEM_RAV} Z"
-          fill="url(#${id})" stroke="${LAKAN_KANT}" stroke-width="3.5" stroke-linejoin="round"/>
-
-    <path d="M62 36 L57 14 L86 30 Z" fill="${LAKAN_VECK}" opacity="0.55"/>
-    <path d="M138 36 L143 14 L114 30 Z" fill="${LAKAN_VECK}" opacity="0.55"/>
-    <path d="M150 62 C160 82 162 102 160 128 L162 132 q-13 18 -26 1 C150 104 152 78 150 62 Z"
-          fill="${LAKAN_MORK}" opacity="0.5"/>
-    <path d="M58 58 Q50 82 52 112" stroke="${LAKAN_VECK}" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
-
-    ${kinder(60, 140, 102)}
-    ${ghostOgon(mood, 80, 120, 84)}
-
-    ${tygHal(100, 120, 17, 12, 0)}
-    <ellipse cx="100" cy="122" rx="13" ry="8.5" fill="#fff8ef"/>
-    <path d="M94 116 Q100 113 106 116 Q104 123 100 124 Q96 123 94 116 Z" fill="#4a3a2c"/>
-    <path d="M100 124 q-4 6 -7 1 M100 124 q4 6 7 1" stroke="#4a3a2c" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-  </svg>`;
-}
-
-function ghostSVG(type, mood) {
-  return type === "fox" ? foxGhost(mood) : kiwiGhost(mood);
+function ghostSVG(type) {
+  return `<img class="pet-art" src="${SPOKBILD[type]}" alt="" draggable="false">`;
 }
 
 function petSVG(type, mood, level) {
-  if (arHalloween()) return ghostSVG(type, mood);
+  if (arHalloween() && harSpokbild(type)) return ghostSVG(type);
   const art = artFor(type);
   return `<img class="pet-art" src="${art.file(poseNumber(type, mood, level))}" alt="" draggable="false">`;
 }
@@ -1362,6 +1250,7 @@ function applyUrlActions() {
   const spoke = params.get("halloween");
   if (spoke === "1" || spoke === "0") {
     state.halloween = spoke === "1" ? "on" : "off";
+    state.halloweenSatt = todayStr();
     saveState();
     showToast(spoke === "1" ? "Halloween på! 👻" : "Halloween av", true);
   }
