@@ -671,3 +671,103 @@ body.halloween #leaves-bg::before {
 body.halloween #leaves-bg::after {
   background: radial-gradient(circle at 30% 30%, rgba(255, 170, 100, 0.9), rgba(255, 170, 100, 0.1));
 }
+
+/* ---------------------------------------------------------
+   Halloweenpynt: pumpor, höstlöv, fladdermöss och spindelväv.
+   Allt som rör sig håller sig inne i djurets ruta. Löv som drar förbi
+   uppgiftstexten gör den svårare att läsa, och Olle läser redan så det
+   räcker. Ute på sidan sitter bara två spindelvävar i hörnen.
+   --------------------------------------------------------- */
+#halloween-pynt {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+#halloween-pynt[hidden] { display: none; }
+
+.pynt-vav {
+  position: absolute;
+  top: -4px;
+  font-size: 2.6rem;
+  line-height: 1;
+  opacity: 0.4;
+  user-select: none;
+}
+.pynt-vav.vanster { left: -4px; transform: rotate(-12deg); }
+.pynt-vav.hoger { right: -4px; transform: scaleX(-1) rotate(-12deg); }
+
+/* Löv och en fladdermus inne i djurets ruta. Rutan klipper av allt som
+   hamnar utanför, så inget sticker ut i resten av sidan. */
+#stage-fall {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+#stage-fall[hidden] { display: none; }
+/* Bubblan och knapparna ska ligga över löven, så ett löv aldrig ser ut att
+   sitta fast på knappen. */
+.pet-speech-bubble, .feed-buttons { position: relative; z-index: 1; }
+.fall-del {
+  position: absolute;
+  line-height: 1;
+  user-select: none;
+  will-change: transform, top;
+}
+.fall-lov {
+  font-size: 1.3rem;
+  opacity: 0.8;
+  animation: stage-lov linear infinite;
+}
+@keyframes stage-lov {
+  from { top: -14%; transform: translateX(0) rotate(0deg); }
+  50%  { top: 50%; transform: translateX(22px) rotate(180deg); }
+  to   { top: 114%; transform: translateX(-10px) rotate(370deg); }
+}
+.fall-flmus {
+  font-size: 1.2rem;
+  opacity: 0.55;
+  top: 4%;
+  animation: stage-flmus linear infinite;
+}
+@keyframes stage-flmus {
+  from { transform: translate(-60px, 0) scale(0.9); }
+  35%  { transform: translate(34vw, 16px) scale(1); }
+  70%  { transform: translate(68vw, -8px) scale(0.95); }
+  to   { transform: translate(112vw, 10px) scale(0.9); }
+}
+
+/* Pumpor och ett par löv på marken, på samma linje som djuret står på. */
+.pet-avatar-row { position: relative; }
+#stage-pynt {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#stage-pynt[hidden] { display: none; }
+.stage-pynt-del {
+  position: absolute;
+  bottom: 0;
+  line-height: 1;
+  user-select: none;
+  filter: drop-shadow(0 3px 4px rgba(120, 60, 10, 0.2));
+  animation: pumpa-gung 5s ease-in-out infinite;
+  transform-origin: 50% 95%;
+}
+.stage-pumpa-stor { left: 0; font-size: 2.7rem; }
+.stage-pumpa-liten { right: 2px; font-size: 1.9rem; animation-duration: 6.4s; }
+.stage-lov-mark { right: 52px; font-size: 1.3rem; animation-duration: 7.2s; filter: none; }
+.stage-lov-mark-2 { left: 48px; font-size: 1.1rem; animation-duration: 8s; filter: none; }
+@keyframes pumpa-gung {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* Den som stängt av rörelse i telefonen får pyntet stillastående i stället. */
+@media (prefers-reduced-motion: reduce) {
+  .fall-del, .stage-pynt-del { animation: none !important; }
+  .fall-lov { top: 24%; opacity: 0.5; }
+  .fall-flmus { top: 6%; }
+}

@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v16 (25 okt, orange halloween)";
+const APP_VERSION = "v17 (25 okt, halloweenpynt)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -757,6 +757,66 @@ function ghostSVG(type) {
   return `<img class="pet-art" src="${SPOKBILD[type]}" alt="" draggable="false">`;
 }
 
+/* Pumpor, höstlöv, fladdermöss och spindelväv. Byggs en gång när lakanet är
+   på och plockas bort igen när det är över, så inget pynt ligger kvar och
+   snurrar i onödan under resten av året. */
+const PYNT_LOV = ["\u{1F342}", "\u{1F341}", "\u{1F33E}"];
+
+// Spindelväv i sidans två övre hörn.
+function halloweenPyntHTML() {
+  return (
+    '<span class="pynt-vav vanster">\u{1F578}\uFE0F</span>' +
+    '<span class="pynt-vav hoger">\u{1F578}\uFE0F</span>'
+  );
+}
+
+// Löv som faller genom djurets ruta, och en fladdermus som flyger förbi.
+// Tiderna är satta för hand så att inget hamnar i takt med något annat.
+function stageFallHTML() {
+  const delar = [
+    '<span class="fall-del fall-flmus" style="animation-duration:26s;animation-delay:-3s">\u{1F987}</span>'
+  ];
+  [
+    { left: 10, dur: 11, delay: 0 },
+    { left: 34, dur: 15, delay: 4 },
+    { left: 58, dur: 13, delay: 8 },
+    { left: 82, dur: 17, delay: 2 }
+  ].forEach((l, i) => {
+    delar.push(
+      `<span class="fall-del fall-lov" style="left:${l.left}%;animation-duration:${l.dur}s;animation-delay:-${l.delay}s">${PYNT_LOV[i % PYNT_LOV.length]}</span>`
+    );
+  });
+  return delar.join("");
+}
+
+// Pumpor och ett par löv på marken bredvid djuret.
+function stagePyntHTML() {
+  return [
+    '<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>',
+    '<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>',
+    '<span class="stage-pynt-del stage-lov-mark">\u{1F342}</span>',
+    '<span class="stage-pynt-del stage-lov-mark-2">\u{1F341}</span>'
+  ].join("");
+}
+
+function fyllPyntLager(lager, pa, html) {
+  if (!lager) return;
+  if (!pa) {
+    if (!lager.hidden) lager.innerHTML = "";
+    lager.hidden = true;
+    return;
+  }
+  if (!lager.innerHTML) lager.innerHTML = html();
+  lager.hidden = false;
+}
+
+function renderHalloweenPynt() {
+  const pa = arHalloween();
+  fyllPyntLager(document.getElementById("halloween-pynt"), pa, halloweenPyntHTML);
+  fyllPyntLager(document.getElementById("stage-fall"), pa, stageFallHTML);
+  fyllPyntLager(document.getElementById("stage-pynt"), pa, stagePyntHTML);
+}
+
 function petSVG(type, mood, level) {
   if (arHalloween() && harSpokbild(type)) return ghostSVG(type);
   const art = artFor(type);
@@ -912,6 +972,7 @@ function renderAll() {
   // Orange bakgrund under samma dagar som lakanet. Sätts vid varje omritning,
   // så en app som legat öppen över midnatt den 2 november blir grön igen.
   document.body.classList.toggle("halloween", arHalloween());
+  renderHalloweenPynt();
   updatePetAvatars("happy");
   updateStatsUI();
   renderTaskSections();
@@ -1264,7 +1325,9 @@ function applyUrlActions() {
   const fyll = params.get("fyll") === "1";
   const niva = parseInt(params.get("niva"), 10);
   const bytNiva = Number.isFinite(niva) && niva >= 1 && niva <= 99;
-  const harSpoke = params.get("halloween") === "1" || params.get("halloween") === "0";
+  // Värdet måste läsas ut nu, innan parametern plockas bort ur adressen.
+  const spoke = params.get("halloween");
+  const harSpoke = spoke === "1" || spoke === "0";
   if (!fyll && !bytNiva && !harSpoke) return;
 
   params.delete("fyll");
@@ -1275,8 +1338,7 @@ function applyUrlActions() {
 
   if (!state.petType) return;
 
-  const spoke = params.get("halloween");
-  if (spoke === "1" || spoke === "0") {
+  if (harSpoke) {
     state.halloween = spoke === "1" ? "on" : "off";
     state.halloweenSatt = todayStr();
     saveState();
@@ -1289,6 +1351,7 @@ function applyUrlActions() {
     showToast("Nivå " + niva + "! 🌟", true);
   }
   if (fyll) topUp();
+  else if (harSpoke) renderAll();
   else {
     updateStatsUI();
     updatePetAvatars();
