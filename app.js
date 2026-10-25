@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v14 (25 okt, orange halloween)";
+const APP_VERSION = "v15 (25 okt, orange halloween)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -18,7 +18,10 @@ const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register("sw.js");
+    // updateViaCache: "none" gör att sw.js alltid hämtas från nätet. Utan det
+    // får webbläsaren servera en sparad kopia i upp till tio minuter, och då
+    // upptäcks ingen ny version fast den ligger ute.
+    const reg = await navigator.serviceWorker.register("sw.js", { updateViaCache: "none" });
 
     // Den nya workern hoppar över kön, så när den tar över laddar vi om en
     // gång och är då på senaste versionen.
