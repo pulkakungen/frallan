@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v13 (24 okt, ritat spöke)";
+const APP_VERSION = "v14 (25 okt, orange halloween)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -906,6 +906,9 @@ function renderTaskSections() {
 }
 
 function renderAll() {
+  // Orange bakgrund under samma dagar som lakanet. Sätts vid varje omritning,
+  // så en app som legat öppen över midnatt den 2 november blir grön igen.
+  document.body.classList.toggle("halloween", arHalloween());
   updatePetAvatars("happy");
   updateStatsUI();
   renderTaskSections();

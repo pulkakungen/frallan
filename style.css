@@ -656,3 +656,18 @@ button {
   color: var(--ink-soft);
   opacity: 0.5;
 }
+
+/* Halloween: varm orange bakgrund i stället för den gröna. Sätts av koden
+   under samma dagar som lakanet, så den försvinner den 2 november. */
+body.halloween {
+  background: linear-gradient(160deg, #ffe4c0 0%, #ffd09a 45%, #ffbf85 100%);
+}
+body.halloween .pet-stage {
+  background: linear-gradient(180deg, #ffd9a8 0%, #fff0d8 100%);
+}
+body.halloween #leaves-bg::before {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 196, 120, 0.95), rgba(255, 196, 120, 0.1));
+}
+body.halloween #leaves-bg::after {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 170, 100, 0.9), rgba(255, 170, 100, 0.1));
+}
