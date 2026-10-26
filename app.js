@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v18 (26 okt, lovvecka)";
+const APP_VERSION = "v19 (26 okt, lovvecka)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -109,7 +109,7 @@ const TASK_SECTIONS = [
       { id: "plocka-frukost", emoji: "🧽", text: "Plocka undan frukosten" },
       { id: "tander-morgon", emoji: "🪥", text: "Borsta tänder" },
       { id: "frukt", emoji: "🍎", text: "Packa frukt", days: utom(DAG_LOR, DAG_SON), dolj: LOVVECKA_UTOM_FRITIDSDAGAR },
-      { id: "gympa", emoji: "🩳", text: "Ta med gympakläder", days: [DAG_TIS, DAG_TORS] },
+      { id: "gympa", emoji: "🩳", text: "Ta med gympakläder", days: [DAG_TIS, DAG_TORS], dolj: LOVVECKA },
       { id: "vaska", emoji: "🎒", text: "Ta väskan", days: VARDAGAR },
       { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR, dolj: LOVVECKA },
       { id: "fritids", emoji: "🧒", text: "Gå till fritids", days: [DAG_TIS, DAG_ONS, DAG_TORS], bara: LOVVECKA }
