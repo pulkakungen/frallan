@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v17 (25 okt, halloweenpynt)";
+const APP_VERSION = "v18 (26 okt, lovvecka)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -84,6 +84,19 @@ function utom(...dagar) {
   return ALLA_DAGAR.filter((d) => !dagar.includes(d));
 }
 
+// Höstlovsveckan: måndag 26 oktober till söndag 1 november 2026. Olle går på
+// fritids i stället för skolan, så några uppgifter ser annorlunda ut just den
+// veckan. Fönstret är satt med datum, så vanliga veckan kommer tillbaka av sig
+// själv på måndagen den 2 november utan att något behöver ändras.
+const LOVVECKA = { fran: "2026-10-26", till: "2026-11-01" };
+
+// Frukt packas bara de dagar han faktiskt går till fritids.
+const LOVVECKA_UTOM_FRITIDSDAGAR = {
+  fran: LOVVECKA.fran,
+  till: LOVVECKA.till,
+  days: [DAG_MAN, DAG_FRE]
+};
+
 const TASK_SECTIONS = [
   {
     id: "morgon",
@@ -95,10 +108,11 @@ const TASK_SECTIONS = [
       { id: "frukost", emoji: "🥣", text: "Ät frukost" },
       { id: "plocka-frukost", emoji: "🧽", text: "Plocka undan frukosten" },
       { id: "tander-morgon", emoji: "🪥", text: "Borsta tänder" },
-      { id: "frukt", emoji: "🍎", text: "Packa frukt", days: utom(DAG_LOR, DAG_SON) },
+      { id: "frukt", emoji: "🍎", text: "Packa frukt", days: utom(DAG_LOR, DAG_SON), dolj: LOVVECKA_UTOM_FRITIDSDAGAR },
       { id: "gympa", emoji: "🩳", text: "Ta med gympakläder", days: [DAG_TIS, DAG_TORS] },
       { id: "vaska", emoji: "🎒", text: "Ta väskan", days: VARDAGAR },
-      { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR }
+      { id: "skolan", emoji: "🏫", text: "Gå till skolan", days: VARDAGAR, dolj: LOVVECKA },
+      { id: "fritids", emoji: "🧒", text: "Gå till fritids", days: [DAG_TIS, DAG_ONS, DAG_TORS], bara: LOVVECKA }
     ]
   },
   {
@@ -134,7 +148,7 @@ const TASK_SECTIONS = [
     tasks: [
       { id: "duscha", emoji: "🚿", text: "Duscha", days: [DAG_ONS, DAG_FRE] },
       { id: "tander-kvall", emoji: "🪥", text: "Borsta tänder" },
-      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan", days: utom(DAG_FRE, DAG_LOR) },
+      { id: "packa-vaska", emoji: "🎒", text: "Packa skolväskan", days: utom(DAG_FRE, DAG_LOR), dolj: LOVVECKA },
       { id: "saga", emoji: "📚", text: "Läs en saga" },
       { id: "sova", emoji: "😴", text: "Sova gott" }
     ]
@@ -146,8 +160,24 @@ function dayOfYear(date) {
   return Math.floor((date - start) / 86400000) + 1;
 }
 
+function datumStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Ett fönster är { fran, till } med datum i båda ändar inräknade, och kan ha
+// days om det bara ska gälla vissa veckodagar inom fönstret.
+function inomFonster(fonster, date) {
+  const d = datumStr(date);
+  if (d < fonster.fran || d > fonster.till) return false;
+  if (fonster.days && !fonster.days.includes(date.getDay())) return false;
+  return true;
+}
+
 // task.days: bara vissa veckodagar. task.parity: "even"/"odd" ger varannan dag.
+// task.dolj: göms inom ett datumfönster. task.bara: finns bara inom ett.
 function isTaskActiveOnDate(task, date) {
+  if (task.dolj && inomFonster(task.dolj, date)) return false;
+  if (task.bara && !inomFonster(task.bara, date)) return false;
   if (task.days && !task.days.includes(date.getDay())) return false;
   if (task.parity) {
     const isEven = dayOfYear(date) % 2 === 0;
@@ -342,6 +372,19 @@ async function hamtaLage() {
 function totalTasksForDate(date) {
   return TASK_SECTIONS.reduce((s, sec) => s + activeTasksForSection(sec, date).length, 0);
 }
+// En uppgift som tagits bort mitt på dagen ska inte ligga kvar i räkningen och
+// ge 6 av 5. Därför räknas bara de klarade som faktiskt gäller det datumet.
+function antalKlaradaForDatum(date) {
+  const d = date === undefined ? new Date() : date;
+  let n = 0;
+  TASK_SECTIONS.forEach((sec) => {
+    activeTasksForSection(sec, d).forEach((t) => {
+      if (state.completedToday[t.id]) n += 1;
+    });
+  });
+  return n;
+}
+
 function totalTasksToday() {
   return totalTasksForDate(new Date());
 }
@@ -570,8 +613,8 @@ function handleDailyReset() {
   if (state.lastActiveDate === today) return;
 
   if (state.lastActiveDate) {
-    const completedCount = Object.keys(state.completedToday).length;
-    const wasFullDay = completedCount >= totalTasksForDate(new Date(state.lastActiveDate + "T00:00:00"));
+    const igar = new Date(state.lastActiveDate + "T00:00:00");
+    const wasFullDay = antalKlaradaForDatum(igar) >= totalTasksForDate(igar);
     const consecutive = isConsecutiveDay(state.lastActiveDate, today);
 
     if (wasFullDay && (consecutive || state.streak === 0)) {
@@ -919,7 +962,7 @@ function updateStatsUI() {
   document.getElementById("feed-btn").disabled = state.food <= 0;
   document.getElementById("love-btn").disabled = state.love <= 0;
 
-  const doneCount = Object.keys(state.completedToday).length;
+  const doneCount = antalKlaradaForDatum();
   const totalToday = totalTasksToday();
   document.getElementById("daily-progress-text").textContent = `${doneCount} / ${totalToday}`;
   document.getElementById("daily-progress-fill").style.width = clamp((doneCount / totalToday) * 100, 0, 100) + "%";
@@ -1155,7 +1198,7 @@ function completeTask(taskId, sectionId) {
       burstConfetti(20);
     }
 
-    if (Object.keys(state.completedToday).length >= totalTasksToday()) {
+    if (antalKlaradaForDatum() >= totalTasksToday()) {
       setTimeout(() => {
         showToast(pick(ALL_DONE_MESSAGES), true);
         burstConfetti(50);
