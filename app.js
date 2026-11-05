@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v21 (5 nov, fler löv)";
+const APP_VERSION = "v22 (5 nov, advent)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -803,6 +803,74 @@ function arHost(date) {
   return arHalloween(d) || inomSasong(HOST_FRAN, HOST_TILL, d);
 }
 
+/* ---------------------------------------------------------
+   Adventsljusen
+   Första advent är den första söndagen från och med den 27 november, så
+   datumet flyttar sig varje år och räknas fram i stället för att skrivas in.
+   Ett nytt ljus ställs dit på fredagen före varje advent och tänds på
+   söndagen. Ljusen står kvar till tjugondag Knut.
+   --------------------------------------------------------- */
+function forstaAdvent(ar) {
+  const d = new Date(ar, 10, 27);
+  d.setDate(d.getDate() + ((7 - d.getDay()) % 7));
+  return d;
+}
+
+// Returnerar { placerade, tanda } eller null när det inte är advent.
+function adventLage(date) {
+  const d = date === undefined ? new Date() : date;
+  // I januari hör julen till året före, annars till det år vi står i.
+  const ar = d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear();
+  const a1 = forstaAdvent(ar);
+  const forstaFredag = new Date(a1);
+  forstaFredag.setDate(forstaFredag.getDate() - 2);
+  const slut = new Date(ar + 1, 0, 13, 23, 59, 59); // tjugondag Knut
+  if (d < forstaFredag || d > slut) return null;
+
+  let placerade = 0, tanda = 0;
+  for (let i = 0; i < 4; i++) {
+    const sondag = new Date(a1);
+    sondag.setDate(sondag.getDate() + i * 7);
+    const fredag = new Date(sondag);
+    fredag.setDate(fredag.getDate() - 2);
+    if (d >= fredag) placerade = i + 1;
+    if (d >= sondag) tanda = i + 1;
+  }
+  return { placerade, tanda };
+}
+
+// Ljusen brinner ner en bit för varje vecka de stått tända, så det första
+// ljuset är kortast när det fjärde ställs dit.
+const LJUS_BREDD = 13, LJUS_GLAPP = 5, LJUS_HOJD = 40, LJUS_NER_PER_VECKA = 4;
+
+function ljusSVG(placerade, tanda) {
+  const bredd = placerade * LJUS_BREDD + (placerade - 1) * LJUS_GLAPP + 10;
+  const mark = 48;
+  let delar = `<rect x="1" y="${mark}" width="${bredd - 2}" height="6" rx="3" fill="#c8922f"/>`;
+  for (let i = 0; i < placerade; i++) {
+    const x = 5 + i * (LJUS_BREDD + LJUS_GLAPP);
+    const veckor = i < tanda ? tanda - i - 1 : 0;
+    const hojd = Math.max(16, LJUS_HOJD - LJUS_NER_PER_VECKA * veckor);
+    const topp = mark - hojd;
+    const mitt = x + LJUS_BREDD / 2;
+    delar += `<rect x="${x}" y="${topp}" width="${LJUS_BREDD}" height="${hojd}" rx="4" fill="#e8584f"/>`;
+    delar += `<rect x="${x + 2.5}" y="${topp + 4}" width="3" height="${Math.max(4, hojd - 9)}" rx="1.5" fill="#ffb3ad" opacity="0.55"/>`;
+    delar += `<rect x="${mitt - 0.8}" y="${topp - 4}" width="1.6" height="4.5" rx="0.8" fill="#6b4a2f"/>`;
+    if (i < tanda) {
+      // Lågan är en droppe: spetsig upptill, rund nertill. Två ellipser blev
+      // bara en ring, för den inre fyllde nästan ut den yttre.
+      const bas = topp - 7.2, spets = topp - 15;
+      delar += `<g class="ljus-laga" style="transform-origin:${mitt}px ${topp - 3}px;animation-delay:-${i * 0.4}s">` +
+        `<path d="M ${mitt} ${spets} C ${mitt + 3.5} ${spets + 4} ${mitt + 3.9} ${bas - 1.8} ${mitt + 3.9} ${bas} ` +
+        `A 3.9 3.9 0 1 1 ${mitt - 3.9} ${bas} C ${mitt - 3.9} ${bas - 1.8} ${mitt - 3.5} ${spets + 4} ${mitt} ${spets} Z" fill="#ffae2e"/>` +
+        `<ellipse cx="${mitt}" cy="${bas + 0.6}" rx="1.4" ry="2.1" fill="#fff6c8"/></g>`;
+    }
+  }
+  // Ritytan börjar ovanför noll. Lågan på ett helt ljus når upp till -7, och
+  // utan marginalen klipptes toppen av så att den såg ut som en kopp.
+  return `<svg class="advent-ljus" viewBox="0 -10 ${bredd} 64" width="${bredd}" height="64" aria-hidden="true">${delar}</svg>`;
+}
+
 // Halloweenbilden är ritad, inte genererad. Mina egna försök att rita ett
 // lakan blev aldrig bra, så kiwin bär den teckning som skickades in. Räven
 // har ingen än och går därför som vanligt.
@@ -870,14 +938,20 @@ const MARKLOV = [
   { left: 90, storlek: 1.1, vinkel: -15, kant: true }
 ];
 
-function stagePyntHTML(halloween) {
+function stagePyntHTML(halloween, host, advent) {
   const delar = [];
+  if (advent) {
+    delar.push(`<span class="advent-stall">${ljusSVG(advent.placerade, advent.tanda)}</span>`);
+  }
   if (halloween) {
     delar.push('<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>');
     delar.push('<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>');
   }
+  if (!host) return delar.join("");
   MARKLOV.forEach((l, i) => {
     if (halloween && l.kant) return;
+    // Vänstra hörnet är ljusstakens plats när den står framme.
+    if (advent && l.left < 30) return;
     delar.push(
       `<span class="stage-lov" style="left:${l.left}%;font-size:${l.storlek}rem;--vinkel:${l.vinkel}deg;animation-duration:${6 + i}s;animation-delay:-${i}s">${PYNT_LOV[i % PYNT_LOV.length]}</span>`
     );
@@ -908,10 +982,13 @@ function fyllPyntLager(lager, pa, nyckel, html) {
 function renderHalloweenPynt() {
   const halloween = arHalloween();
   const host = arHost();
-  const nyckel = halloween ? "halloween" : "host";
+  const advent = adventLage();
+  const nyckel =
+    (halloween ? "halloween" : host ? "host" : "") +
+    (advent ? `advent${advent.placerade}-${advent.tanda}` : "");
   fyllPyntLager(document.getElementById("halloween-pynt"), halloween, "halloween", halloweenPyntHTML);
-  fyllPyntLager(document.getElementById("stage-fall"), host, nyckel, () => stageFallHTML(halloween));
-  fyllPyntLager(document.getElementById("stage-pynt"), host, nyckel, () => stagePyntHTML(halloween));
+  fyllPyntLager(document.getElementById("stage-fall"), host, halloween ? "halloween" : "host", () => stageFallHTML(halloween));
+  fyllPyntLager(document.getElementById("stage-pynt"), host || !!advent, nyckel, () => stagePyntHTML(halloween, host, advent));
 }
 
 function petSVG(type, mood, level) {
@@ -1066,9 +1143,9 @@ function renderTaskSections() {
 }
 
 function renderAll() {
-  // Orange bakgrund under samma dagar som lakanet. Sätts vid varje omritning,
-  // så en app som legat öppen över midnatt den 2 november blir grön igen.
-  document.body.classList.toggle("halloween", arHalloween());
+  // Orange bakgrund hela hösten, till och med den 1 december. Sätts vid varje
+  // omritning, så en app som legat öppen över midnatt blir grön igen själv.
+  document.body.classList.toggle("host", arHost());
   renderHalloweenPynt();
   updatePetAvatars("happy");
   updateStatsUI();

@@ -657,18 +657,18 @@ button {
   opacity: 0.5;
 }
 
-/* Halloween: varm orange bakgrund i stället för den gröna. Sätts av koden
-   under samma dagar som lakanet, så den försvinner den 2 november. */
-body.halloween {
+/* Höst: varm orange bakgrund i stället för den gröna. Sätts av koden hela
+   hösten, till och med den 1 december. */
+body.host {
   background: linear-gradient(160deg, #ffe4c0 0%, #ffd09a 45%, #ffbf85 100%);
 }
-body.halloween .pet-stage {
+body.host .pet-stage {
   background: linear-gradient(180deg, #ffd9a8 0%, #fff0d8 100%);
 }
-body.halloween #leaves-bg::before {
+body.host #leaves-bg::before {
   background: radial-gradient(circle at 30% 30%, rgba(255, 196, 120, 0.95), rgba(255, 196, 120, 0.1));
 }
-body.halloween #leaves-bg::after {
+body.host #leaves-bg::after {
   background: radial-gradient(circle at 30% 30%, rgba(255, 170, 100, 0.9), rgba(255, 170, 100, 0.1));
 }
 
@@ -770,6 +770,24 @@ body.halloween #leaves-bg::after {
   transform-origin: 50% 90%;
   animation: lov-vagga ease-in-out infinite;
 }
+
+/* Adventsljusstaken står i vänstra hörnet av marken. */
+.advent-stall {
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  line-height: 0;
+  user-select: none;
+  filter: drop-shadow(0 3px 4px rgba(120, 60, 10, 0.18));
+}
+.advent-ljus { display: block; }
+.ljus-laga { animation: laga-flimmer 1.5s ease-in-out infinite; }
+@keyframes laga-flimmer {
+  0%, 100% { transform: scale(1, 1); }
+  35% { transform: scale(1.14, 0.9); }
+  70% { transform: scale(0.92, 1.08); }
+}
+
 @keyframes lov-vagga {
   0%, 100% { transform: rotate(calc(var(--vinkel, 0deg) - 4deg)); }
   50% { transform: rotate(calc(var(--vinkel, 0deg) + 4deg)); }
@@ -781,7 +799,7 @@ body.halloween #leaves-bg::after {
 
 /* Den som stängt av rörelse i telefonen får pyntet stillastående i stället. */
 @media (prefers-reduced-motion: reduce) {
-  .fall-del, .stage-pynt-del, .stage-lov { animation: none !important; }
+  .fall-del, .stage-pynt-del, .stage-lov, .ljus-laga { animation: none !important; }
   .fall-lov { top: 24%; opacity: 0.5; }
   .fall-flmus { top: 6%; }
 }
