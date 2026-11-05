@@ -726,6 +726,18 @@ body.host #leaves-bg::after {
   50%  { top: 50%; transform: translateX(22px) rotate(180deg); }
   to   { top: 114%; transform: translateX(-10px) rotate(370deg); }
 }
+/* Snöflingorna faller långsammare än löven och vaggar mer i sidled. */
+.fall-flinga {
+  opacity: 0.9;
+  animation: stage-sno linear infinite;
+}
+@keyframes stage-sno {
+  from { top: -14%; transform: translateX(0) rotate(0deg); }
+  30%  { transform: translateX(16px) rotate(60deg); }
+  65%  { transform: translateX(-14px) rotate(140deg); }
+  to   { top: 114%; transform: translateX(10px) rotate(220deg); }
+}
+
 .fall-flmus {
   font-size: 1.2rem;
   opacity: 0.55;
@@ -800,6 +812,6 @@ body.host #leaves-bg::after {
 /* Den som stängt av rörelse i telefonen får pyntet stillastående i stället. */
 @media (prefers-reduced-motion: reduce) {
   .fall-del, .stage-pynt-del, .stage-lov, .ljus-laga { animation: none !important; }
-  .fall-lov { top: 24%; opacity: 0.5; }
+  .fall-lov, .fall-flinga { top: 24%; opacity: 0.5; }
   .fall-flmus { top: 6%; }
 }

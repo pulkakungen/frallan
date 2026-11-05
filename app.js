@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v22 (5 nov, advent)";
+const APP_VERSION = "v23 (5 nov, vinter)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -773,10 +773,13 @@ const HALLOWEEN_FRAN = { manad: 10, dag: 24 }; // 24 oktober
 const HALLOWEEN_TILL = { manad: 11, dag: 1 };  // till och med 1 november
 
 // Hösten är längre än halloween. Löven börjar falla samtidigt som lakanet
-// kommer på och ligger kvar en månad till, till och med den 1 december.
-// Pumpor, spindelväv, fladdermus och spöke hör bara till halloweenveckan.
+// kommer på och ligger kvar till och med den 30 november, med orange
+// bakgrund. Pumpor, spindelväv, fladdermus och spöke hör bara till
+// halloweenveckan. Den 1 december tar vintern vid med några snöflingor.
 const HOST_FRAN = { manad: 10, dag: 24 }; // 24 oktober
-const HOST_TILL = { manad: 12, dag: 1 };  // till och med 1 december
+const HOST_TILL = { manad: 11, dag: 30 }; // till och med 30 november
+const VINTER_FRAN = { manad: 12, dag: 1 };  // 1 december
+const VINTER_TILL = { manad: 2, dag: 28 };  // till och med sista februari
 
 // Ett fönster som { manad, dag } i båda ändar, båda dagarna inräknade.
 // Fönstret får gå över ett årsskifte, därför jämförelsen i två delar.
@@ -801,6 +804,13 @@ function arHalloween(date) {
 function arHost(date) {
   const d = date === undefined ? new Date() : date;
   return arHalloween(d) || inomSasong(HOST_FRAN, HOST_TILL, d);
+}
+
+function arVinter(date) {
+  const d = date === undefined ? new Date() : date;
+  // Ett påslaget halloween ska inte ge snö, det vore bara förvirrande.
+  if (arHalloween(d)) return false;
+  return inomSasong(VINTER_FRAN, VINTER_TILL, d);
 }
 
 /* ---------------------------------------------------------
@@ -912,6 +922,21 @@ const FALLANDE_LOV = [
   { left: 88, dur: 15, delay: 4 }
 ];
 
+// Några få snöflingor, långsammare än löven och i glesare banor.
+const SNOFLINGOR = [
+  { left: 16, dur: 19, delay: 0, storlek: 1.1 },
+  { left: 42, dur: 26, delay: 9, storlek: 0.85 },
+  { left: 66, dur: 22, delay: 4, storlek: 1 },
+  { left: 87, dur: 29, delay: 14, storlek: 0.8 }
+];
+
+function stageSnoHTML() {
+  return SNOFLINGOR.map(
+    (f) =>
+      `<span class="fall-del fall-flinga" style="left:${f.left}%;font-size:${f.storlek}rem;animation-duration:${f.dur}s;animation-delay:-${f.delay}s">\u2744\uFE0F</span>`
+  ).join("");
+}
+
 function stageFallHTML(halloween) {
   const delar = [];
   if (halloween) {
@@ -982,13 +1007,19 @@ function fyllPyntLager(lager, pa, nyckel, html) {
 function renderHalloweenPynt() {
   const halloween = arHalloween();
   const host = arHost();
+  const vinter = arVinter();
   const advent = adventLage();
-  const nyckel =
+  const fallNyckel = halloween ? "halloween" : vinter ? "vinter" : "host";
+  const markNyckel =
     (halloween ? "halloween" : host ? "host" : "") +
     (advent ? `advent${advent.placerade}-${advent.tanda}` : "");
   fyllPyntLager(document.getElementById("halloween-pynt"), halloween, "halloween", halloweenPyntHTML);
-  fyllPyntLager(document.getElementById("stage-fall"), host, halloween ? "halloween" : "host", () => stageFallHTML(halloween));
-  fyllPyntLager(document.getElementById("stage-pynt"), host || !!advent, nyckel, () => stagePyntHTML(halloween, host, advent));
+  fyllPyntLager(document.getElementById("stage-fall"), host || vinter, fallNyckel, () =>
+    vinter ? stageSnoHTML() : stageFallHTML(halloween)
+  );
+  fyllPyntLager(document.getElementById("stage-pynt"), host || !!advent, markNyckel, () =>
+    stagePyntHTML(halloween, host, advent)
+  );
 }
 
 function petSVG(type, mood, level) {
