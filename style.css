@@ -758,8 +758,22 @@ body.halloween #leaves-bg::after {
 }
 .stage-pumpa-stor { left: 0; font-size: 2.7rem; }
 .stage-pumpa-liten { right: 2px; font-size: 1.9rem; animation-duration: 6.4s; }
-.stage-lov-mark { right: 52px; font-size: 1.3rem; animation-duration: 7.2s; filter: none; }
-.stage-lov-mark-2 { left: 48px; font-size: 1.1rem; animation-duration: 8s; filter: none; }
+
+/* Löven som ligger på marken. Varje löv har sin egen vinkel och vaggar
+   lite kring den, som om det låg och rörde sig i draget. */
+.stage-lov {
+  position: absolute;
+  bottom: 0;
+  line-height: 1;
+  user-select: none;
+  transform: rotate(var(--vinkel, 0deg));
+  transform-origin: 50% 90%;
+  animation: lov-vagga ease-in-out infinite;
+}
+@keyframes lov-vagga {
+  0%, 100% { transform: rotate(calc(var(--vinkel, 0deg) - 4deg)); }
+  50% { transform: rotate(calc(var(--vinkel, 0deg) + 4deg)); }
+}
 @keyframes pumpa-gung {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(3deg); }
@@ -767,7 +781,7 @@ body.halloween #leaves-bg::after {
 
 /* Den som stängt av rörelse i telefonen får pyntet stillastående i stället. */
 @media (prefers-reduced-motion: reduce) {
-  .fall-del, .stage-pynt-del { animation: none !important; }
+  .fall-del, .stage-pynt-del, .stage-lov { animation: none !important; }
   .fall-lov { top: 24%; opacity: 0.5; }
   .fall-flmus { top: 6%; }
 }

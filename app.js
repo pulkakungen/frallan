@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v20 (5 nov, höstlöv)";
+const APP_VERSION = "v21 (5 nov, fler löv)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -821,7 +821,8 @@ function ghostSVG(type) {
 /* Pumpor, höstlöv, fladdermöss och spindelväv. Byggs en gång när lakanet är
    på och plockas bort igen när det är över, så inget pynt ligger kvar och
    snurrar i onödan under resten av året. */
-const PYNT_LOV = ["\u{1F342}", "\u{1F341}", "\u{1F33E}"];
+// Bara de två höstlöven. Axet var grönt och såg ut som gräs.
+const PYNT_LOV = ["\u{1F342}", "\u{1F341}"];
 
 // Spindelväv i sidans två övre hörn.
 function halloweenPyntHTML() {
@@ -834,17 +835,21 @@ function halloweenPyntHTML() {
 // Löv som faller genom djurets ruta hela hösten, och under halloweenveckan
 // en fladdermus som flyger förbi. Tiderna är satta för hand så att inget
 // hamnar i takt med något annat.
+const FALLANDE_LOV = [
+  { left: 7, dur: 11, delay: 0 },
+  { left: 23, dur: 16, delay: 6 },
+  { left: 39, dur: 13, delay: 3 },
+  { left: 55, dur: 18, delay: 9 },
+  { left: 71, dur: 12, delay: 14 },
+  { left: 88, dur: 15, delay: 4 }
+];
+
 function stageFallHTML(halloween) {
   const delar = [];
   if (halloween) {
     delar.push('<span class="fall-del fall-flmus" style="animation-duration:26s;animation-delay:-3s">\u{1F987}</span>');
   }
-  [
-    { left: 10, dur: 11, delay: 0 },
-    { left: 34, dur: 15, delay: 4 },
-    { left: 58, dur: 13, delay: 8 },
-    { left: 82, dur: 17, delay: 2 }
-  ].forEach((l, i) => {
+  FALLANDE_LOV.forEach((l, i) => {
     delar.push(
       `<span class="fall-del fall-lov" style="left:${l.left}%;animation-duration:${l.dur}s;animation-delay:-${l.delay}s">${PYNT_LOV[i % PYNT_LOV.length]}</span>`
     );
@@ -852,15 +857,31 @@ function stageFallHTML(halloween) {
   return delar.join("");
 }
 
-// Löv på marken bredvid djuret hela hösten, pumpor bara under halloween.
+// Löv som redan landat, utspridda längs marken bredvid djuret. De två
+// ytterst står över när pumporna är framme, annars blir hörnen för fulla.
+// vinkel gör att de ser nedblåsta ut i stället för uppradade.
+const MARKLOV = [
+  { left: 1, storlek: 1.15, vinkel: -18, kant: true },
+  { left: 13, storlek: 1.35, vinkel: 9 },
+  { left: 27, storlek: 1, vinkel: -7 },
+  { left: 43, storlek: 1.25, vinkel: 14 },
+  { left: 59, storlek: 1.05, vinkel: -12 },
+  { left: 74, storlek: 1.3, vinkel: 6 },
+  { left: 90, storlek: 1.1, vinkel: -15, kant: true }
+];
+
 function stagePyntHTML(halloween) {
   const delar = [];
   if (halloween) {
     delar.push('<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>');
     delar.push('<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>');
   }
-  delar.push('<span class="stage-pynt-del stage-lov-mark">\u{1F342}</span>');
-  delar.push('<span class="stage-pynt-del stage-lov-mark-2">\u{1F341}</span>');
+  MARKLOV.forEach((l, i) => {
+    if (halloween && l.kant) return;
+    delar.push(
+      `<span class="stage-lov" style="left:${l.left}%;font-size:${l.storlek}rem;--vinkel:${l.vinkel}deg;animation-duration:${6 + i}s;animation-delay:-${i}s">${PYNT_LOV[i % PYNT_LOV.length]}</span>`
+    );
+  });
   return delar.join("");
 }
 
