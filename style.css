@@ -212,6 +212,18 @@ button {
 .pet-avatar { width: 54px; height: 54px; flex-shrink: 0; }
 
 /* Djur som är riktiga bildfiler fyller sin ruta utan att bli utdragna. */
+/* Plaggen ligger i ett eget lager ovanpå teckningen, med overflow synlig
+   så att tofsen får sticka upp ovanför bildens kant. */
+#pet-avatar, .pet-avatar-big, .baby-avatar, .pet-avatar-preview { position: relative; }
+.pet-plagg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
 .pet-art {
   width: 100%;
   height: 100%;
@@ -670,6 +682,20 @@ body.host #leaves-bg::before {
 }
 body.host #leaves-bg::after {
   background: radial-gradient(circle at 30% 30%, rgba(255, 170, 100, 0.9), rgba(255, 170, 100, 0.1));
+}
+
+/* Vinter: sval blå bakgrund från den 1 december. */
+body.vinter {
+  background: linear-gradient(160deg, #e6f1fb 0%, #cfe3f6 45%, #bcd7f1 100%);
+}
+body.vinter .pet-stage {
+  background: linear-gradient(180deg, #d8e9f9 0%, #f4faff 100%);
+}
+body.vinter #leaves-bg::before {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.1));
+}
+body.vinter #leaves-bg::after {
+  background: radial-gradient(circle at 30% 30%, rgba(176, 210, 240, 0.9), rgba(176, 210, 240, 0.1));
 }
 
 /* ---------------------------------------------------------

@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v23 (5 nov, vinter)";
+const APP_VERSION = "v24 (5 nov, mössa och halsduk)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -1022,10 +1022,110 @@ function renderHalloweenPynt() {
   );
 }
 
+// Var mössan och halsduken sitter i varje pose. a är posens höjd delad med
+// bredden, h är [x, y, bredd] för mössans brätte och s detsamma för
+// halsduken, allt som andelar av bilden. Siffrorna är uppmätta ur varje
+// teckning och sedan efterjusterade för hand där djuret ligger ner eller
+// redan har något på huvudet. null betyder att plagget hoppas över.
+const VINTERPLAGG = {
+ kiwi: [
+  { a: 0.827, h: [0.685,0.16,0.335], s: [0.477,0.394,0.473] },
+  { a: 1.665, h: [0.642,0.153,0.18], s: [0.448,0.393,0.401] },
+  { a: 1.175, h: null, s: [0.507,0.39,0.52] },
+  { a: 1.084, h: [0.375,0.148,0.34], s: [0.53,0.39,0.52] },
+  { a: 0.931, h: [0.445,0.152,0.214], s: [0.51,0.391,0.52] },
+  { a: 1.17, h: [0.292,0.153,0.298], s: [0.43,0.393,0.52] },
+  { a: 0.943, h: [0.453,0.157,0.313], s: [0.482,0.394,0.52] },
+  { a: 1.028, h: [0.603,0.148,0.329], s: [0.393,0.39,0.52] },
+  { a: 1.264, h: [0.743,0.148,0.34], s: [0.525,0.388,0.52] },
+  { a: 1.078, h: [0.547,0.152,0.34], s: [0.623,0.389,0.436] },
+  { a: 0.788, h: [0.535,0.16,0.34], s: [0.422,0.392,0.52] },
+  { a: 0.923, h: [0.44,0.152,0.34], s: [0.495,0.391,0.52] },
+  { a: 0.626, h: [0.67,0.176,0.338], s: [0.6,0.399,0.52] },
+  { a: 1.288, h: [0.542,0.153,0.34], s: [0.525,0.393,0.52] },
+  { a: 0.483, h: [0.657,0.195,0.338], s: [0.535,0.405,0.52] },
+  { a: 1.23, h: [0.542,0.153,0.34], s: [0.525,0.393,0.52] },
+  { a: 1.316, h: [0.425,0.152,0.335], s: [0.505,0.391,0.52] },
+  { a: 1.189, h: [0.61,0.148,0.298], s: [0.55,0.39,0.52] },
+  { a: 1.326, h: [0.485,0.148,0.34], s: [0.487,0.39,0.52] },
+  { a: 1.181, h: null, s: [0.43,0.39,0.432] }
+ ],
+ fox: [
+  { a: 1.071, h: [0.525,0.153,0.34], s: [0.593,0.393,0.52] },
+  { a: 1.261, h: [0.608,0.148,0.34], s: [0.598,0.39,0.455] },
+  { a: 1.037, h: [0.365,0.152,0.34], s: [0.43,0.391,0.52] },
+  { a: 1.054, h: [0.41,0.148,0.34], s: [0.388,0.39,0.52] },
+  { a: 1.339, h: [0.52,0.46,0.27], s: [0.5,0.71,0.3] },
+  { a: 0.825, h: [0.578,0.16,0.22], s: [0.5,0.394,0.52] },
+  { a: 1.094, h: [0.5,0.5,0.32], s: [0.5,0.8,0.5] },
+  { a: 1.099, h: [0.328,0.153,0.329], s: [0.4,0.393,0.52] },
+  { a: 1.06, h: [0.55,0.153,0.34], s: [0.6,0.393,0.52] },
+  { a: 1.254, h: [0.453,0.153,0.276], s: [0.573,0.393,0.482] },
+  { a: 0.938, h: [0.568,0.152,0.34], s: [0.53,0.391,0.52] },
+  { a: 0.826, h: null, s: [0.51,0.394,0.52] },
+  { a: 1.161, h: null, s: [0.557,0.39,0.52] },
+  { a: 0.878, h: [0.575,0.156,0.332], s: [0.605,0.393,0.477] },
+  { a: 0.992, h: [0.735,0.148,0.34], s: [0.53,0.39,0.52] },
+  { a: 0.988, h: [0.637,0.153,0.34], s: [0.562,0.393,0.52] },
+  { a: 0.979, h: [0.583,0.152,0.338], s: [0.573,0.391,0.52] },
+  { a: 1.03, h: null, s: [0.573,0.393,0.473] },
+  { a: 1.009, h: null, s: null },
+  { a: 1.192, h: [0.522,0.153,0.34], s: [0.54,0.393,0.52] }
+ ]
+};
+
+/* Mössa och halsduk ritas i ett eget lager ovanpå teckningen. Lagret har
+   samma proportioner som posen och skalas på samma sätt, så plaggen följer
+   djuret oavsett hur stort det ritas. Att rita in dem i filerna hade krävt
+   fyrtio nya teckningar. */
+const PLAGG_GRON = "#3f9a6a", PLAGG_MORK = "#348257", PLAGG_KRAM = "#f6f1e3", PLAGG_LINJE = "#4a3426";
+
+function mossaSVG(cx, by, w, lw) {
+  const h = w * 0.72;
+  return `<g transform="translate(${cx} ${by})" stroke="${PLAGG_LINJE}"
+             stroke-width="${lw}" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M ${-w / 2} 0 C ${-w * 0.46} ${-h} ${w * 0.46} ${-h} ${w / 2} 0 Z" fill="${PLAGG_GRON}"/>
+    <path d="M ${-w * 0.2} ${-h * 0.82} C ${-w * 0.08} ${-h * 0.93} ${w * 0.05} ${-h * 0.93} ${w * 0.14} ${-h * 0.8}"
+          fill="none" stroke="${PLAGG_MORK}" stroke-width="${lw * 0.8}"/>
+    <rect x="${-w * 0.55}" y="${-w * 0.17}" width="${w * 1.1}" height="${w * 0.22}" rx="${w * 0.11}" fill="${PLAGG_KRAM}"/>
+    <circle cx="0" cy="${-h - w * 0.03}" r="${w * 0.155}" fill="${PLAGG_KRAM}"/>
+  </g>`;
+}
+
+function halsdukSVG(cx, sy, w, lw) {
+  const t = w * 0.19, b = w * 0.26;
+  return `<g transform="translate(${cx} ${sy})" stroke="${PLAGG_LINJE}"
+             stroke-width="${lw}" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M ${w * 0.09} ${w * 0.15} l ${b} ${-w * 0.02} l ${b * 0.2} ${w * 0.44} l ${-b * 1.1} ${w * 0.05} Z" fill="${PLAGG_GRON}"/>
+    <path d="M ${w * 0.09 + b * 0.09} ${w * 0.47} l ${b * 1.06} ${-w * 0.035} l ${b * 0.09} ${w * 0.12} l ${-b * 1.12} ${w * 0.035} Z"
+          fill="${PLAGG_KRAM}" stroke="none"/>
+    <path d="M ${-w / 2} 0 Q 0 ${w * 0.3} ${w / 2} 0 L ${w / 2} ${t} Q 0 ${w * 0.3 + t} ${-w / 2} ${t} Z" fill="${PLAGG_GRON}"/>
+    <path d="M ${-w * 0.16} ${w * 0.195} l ${w * 0.1} ${-0.004} l 0 ${t} l ${-w * 0.1} 0.004 Z"
+          fill="${PLAGG_KRAM}" stroke="none"/>
+  </g>`;
+}
+
+// B är bildens bredd i lagrets egna enheter. Höjden följer posens proportion,
+// så en cirkel blir en cirkel och inte en ellips.
+const PLAGG_B = 100;
+
+function vinterplaggSVG(type, pose) {
+  const rad = (VINTERPLAGG[type] || VINTERPLAGG.kiwi)[pose];
+  if (!rad || (!rad.h && !rad.s)) return "";
+  const H = PLAGG_B * rad.a;
+  const lw = PLAGG_B * 0.026;
+  let delar = "";
+  if (rad.s) delar += halsdukSVG(rad.s[0] * PLAGG_B, rad.s[1] * H, rad.s[2] * PLAGG_B, lw);
+  if (rad.h) delar += mossaSVG(rad.h[0] * PLAGG_B, rad.h[1] * H, rad.h[2] * PLAGG_B, lw);
+  return `<svg class="pet-plagg" viewBox="0 0 ${PLAGG_B} ${H}" aria-hidden="true">${delar}</svg>`;
+}
+
 function petSVG(type, mood, level) {
   if (arHalloween() && harSpokbild(type)) return ghostSVG(type);
   const art = artFor(type);
-  return `<img class="pet-art" src="${art.file(poseNumber(type, mood, level))}" alt="" draggable="false">`;
+  const pose = poseNumber(type, mood, level);
+  const plagg = arVinter() ? vinterplaggSVG(type, pose) : "";
+  return `<img class="pet-art" src="${art.file(pose)}" alt="" draggable="false">${plagg}`;
 }
 
 let currentMood = "happy";
@@ -1174,9 +1274,10 @@ function renderTaskSections() {
 }
 
 function renderAll() {
-  // Orange bakgrund hela hösten, till och med den 1 december. Sätts vid varje
-  // omritning, så en app som legat öppen över midnatt blir grön igen själv.
+  // Orange bakgrund hela hösten och blå hela vintern. Sätts vid varje
+  // omritning, så en app som legat öppen över midnatt byter färg själv.
   document.body.classList.toggle("host", arHost());
+  document.body.classList.toggle("vinter", arVinter());
   renderHalloweenPynt();
   updatePetAvatars("happy");
   updateStatsUI();
