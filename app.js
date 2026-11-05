@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v19 (26 okt, lovvecka)";
+const APP_VERSION = "v20 (5 nov, höstlöv)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -772,6 +772,21 @@ function petSizeScale(level) {
 const HALLOWEEN_FRAN = { manad: 10, dag: 24 }; // 24 oktober
 const HALLOWEEN_TILL = { manad: 11, dag: 1 };  // till och med 1 november
 
+// Hösten är längre än halloween. Löven börjar falla samtidigt som lakanet
+// kommer på och ligger kvar en månad till, till och med den 1 december.
+// Pumpor, spindelväv, fladdermus och spöke hör bara till halloweenveckan.
+const HOST_FRAN = { manad: 10, dag: 24 }; // 24 oktober
+const HOST_TILL = { manad: 12, dag: 1 };  // till och med 1 december
+
+// Ett fönster som { manad, dag } i båda ändar, båda dagarna inräknade.
+// Fönstret får gå över ett årsskifte, därför jämförelsen i två delar.
+function inomSasong(fran, till, d) {
+  const nu = (d.getMonth() + 1) * 100 + d.getDate();
+  const a = fran.manad * 100 + fran.dag;
+  const b = till.manad * 100 + till.dag;
+  return a <= b ? nu >= a && nu <= b : nu >= a || nu <= b;
+}
+
 function arHalloween(date) {
   const d = date === undefined ? new Date() : date;
   // Ett manuellt val gäller bara dagen ut. Annars skulle ett ?halloween=1
@@ -779,10 +794,13 @@ function arHalloween(date) {
   const manuellt = state.halloweenSatt === todayStr() ? state.halloween : "auto";
   if (manuellt === "on") return true;
   if (manuellt === "off") return false;
-  const m = d.getMonth() + 1, dag = d.getDate();
-  if (m === HALLOWEEN_FRAN.manad && dag >= HALLOWEEN_FRAN.dag) return true;
-  if (m === HALLOWEEN_TILL.manad && dag <= HALLOWEEN_TILL.dag) return true;
-  return false;
+  return inomSasong(HALLOWEEN_FRAN, HALLOWEEN_TILL, d);
+}
+
+// Halloween räknas alltid som höst, även när det slagits på för hand.
+function arHost(date) {
+  const d = date === undefined ? new Date() : date;
+  return arHalloween(d) || inomSasong(HOST_FRAN, HOST_TILL, d);
 }
 
 // Halloweenbilden är ritad, inte genererad. Mina egna försök att rita ett
@@ -813,12 +831,14 @@ function halloweenPyntHTML() {
   );
 }
 
-// Löv som faller genom djurets ruta, och en fladdermus som flyger förbi.
-// Tiderna är satta för hand så att inget hamnar i takt med något annat.
-function stageFallHTML() {
-  const delar = [
-    '<span class="fall-del fall-flmus" style="animation-duration:26s;animation-delay:-3s">\u{1F987}</span>'
-  ];
+// Löv som faller genom djurets ruta hela hösten, och under halloweenveckan
+// en fladdermus som flyger förbi. Tiderna är satta för hand så att inget
+// hamnar i takt med något annat.
+function stageFallHTML(halloween) {
+  const delar = [];
+  if (halloween) {
+    delar.push('<span class="fall-del fall-flmus" style="animation-duration:26s;animation-delay:-3s">\u{1F987}</span>');
+  }
   [
     { left: 10, dur: 11, delay: 0 },
     { left: 34, dur: 15, delay: 4 },
@@ -832,32 +852,45 @@ function stageFallHTML() {
   return delar.join("");
 }
 
-// Pumpor och ett par löv på marken bredvid djuret.
-function stagePyntHTML() {
-  return [
-    '<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>',
-    '<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>',
-    '<span class="stage-pynt-del stage-lov-mark">\u{1F342}</span>',
-    '<span class="stage-pynt-del stage-lov-mark-2">\u{1F341}</span>'
-  ].join("");
+// Löv på marken bredvid djuret hela hösten, pumpor bara under halloween.
+function stagePyntHTML(halloween) {
+  const delar = [];
+  if (halloween) {
+    delar.push('<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>');
+    delar.push('<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>');
+  }
+  delar.push('<span class="stage-pynt-del stage-lov-mark">\u{1F342}</span>');
+  delar.push('<span class="stage-pynt-del stage-lov-mark-2">\u{1F341}</span>');
+  return delar.join("");
 }
 
-function fyllPyntLager(lager, pa, html) {
+// Nyckeln säger vilken uppsättning som ligger i lagret. Byter den, byggs
+// lagret om. Annars skulle pumporna bli kvar när halloween tar slut men
+// löven fortsätter.
+function fyllPyntLager(lager, pa, nyckel, html) {
   if (!lager) return;
   if (!pa) {
-    if (!lager.hidden) lager.innerHTML = "";
+    if (!lager.hidden) {
+      lager.innerHTML = "";
+      lager.dataset.pynt = "";
+    }
     lager.hidden = true;
     return;
   }
-  if (!lager.innerHTML) lager.innerHTML = html();
+  if (lager.dataset.pynt !== nyckel) {
+    lager.innerHTML = html();
+    lager.dataset.pynt = nyckel;
+  }
   lager.hidden = false;
 }
 
 function renderHalloweenPynt() {
-  const pa = arHalloween();
-  fyllPyntLager(document.getElementById("halloween-pynt"), pa, halloweenPyntHTML);
-  fyllPyntLager(document.getElementById("stage-fall"), pa, stageFallHTML);
-  fyllPyntLager(document.getElementById("stage-pynt"), pa, stagePyntHTML);
+  const halloween = arHalloween();
+  const host = arHost();
+  const nyckel = halloween ? "halloween" : "host";
+  fyllPyntLager(document.getElementById("halloween-pynt"), halloween, "halloween", halloweenPyntHTML);
+  fyllPyntLager(document.getElementById("stage-fall"), host, nyckel, () => stageFallHTML(halloween));
+  fyllPyntLager(document.getElementById("stage-pynt"), host, nyckel, () => stagePyntHTML(halloween));
 }
 
 function petSVG(type, mood, level) {
