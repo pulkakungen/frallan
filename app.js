@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v25 (7 nov, nya kiwifåglar)";
+const APP_VERSION = "v26 (7 nov, höstkiwi)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -679,9 +679,17 @@ function applyStatDecay() {
    Båda djuren är riktiga illustrationer, inte ritade i kod.
    Varje min och varje nivå har sin egen pose ur bildarken.
    --------------------------------------------------------- */
+// Kiwifågeln har en höstuppsättning där den står i en lövhög. Samma poser,
+// samma nummer, bara en annan teckning. Den gäller hela hösten, alltså fram
+// till och med den 30 november.
+function kiwiFil(n) {
+  const nr = String(n).padStart(2, "0");
+  return arHost() ? `djur/kiwi-host-${nr}.png` : `djur/kiwi-${nr}.png`;
+}
+
 const PET_ART = {
   kiwi: {
-    file: (n) => `djur/kiwi-${String(n).padStart(2, "0")}.png`,
+    file: (n) => kiwiFil(n),
     mood: { yum: 2, love: 7 },
     sleep: 5,
     wonder: 0,
@@ -966,7 +974,9 @@ function stagePyntHTML(halloween, host, advent) {
     delar.push('<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>');
     delar.push('<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>');
   }
-  if (!host) return delar.join("");
+  // Höstkiwin står redan i en lövhög. Två lövhögar på samma mark blir rörigt,
+  // så de ritade marklöven hoppas över då.
+  if (!host || state.petType === "kiwi") return delar.join("");
   MARKLOV.forEach((l, i) => {
     if (halloween && l.kant) return;
     // Vänstra hörnet är ljusstakens plats när den står framme.
