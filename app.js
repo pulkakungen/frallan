@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v28 (7 nov, vinterkiwi)";
+const APP_VERSION = "v29 (7 nov, luciakiwi)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -679,13 +679,14 @@ function applyStatDecay() {
    Båda djuren är riktiga illustrationer, inte ritade i kod.
    Varje min och varje nivå har sin egen pose ur bildarken.
    --------------------------------------------------------- */
-// Kiwifågeln har fyra uppsättningar: vardag, höst i lövhög, vinter med mössa
-// och halsduk, och tomteluva mellan den 16 december och trettondedagen. Samma
-// poser och samma nummer i alla, bara andra teckningar, så humör, sömn och
-// nivåer fungerar likadant hela året.
+// Kiwifågeln har fem uppsättningar: vardag, höst i lövhög, vinter med mössa
+// och halsduk, stjärngossestrut lucciaveckan och tomteluva från den 16
+// december. Samma poser och samma nummer i alla, bara andra teckningar, så
+// humör, sömn och nivåer fungerar likadant hela året.
 function kiwiFil(n) {
   const nr = String(n).padStart(2, "0");
   if (arTomte()) return `djur/kiwi-tomte-${nr}.png`;
+  if (arLucia()) return `djur/kiwi-lucia-${nr}.png`;
   if (arVinter()) return `djur/kiwi-vinter-${nr}.png`;
   if (arHost()) return `djur/kiwi-host-${nr}.png`;
   return `djur/kiwi-${nr}.png`;
@@ -810,6 +811,15 @@ function arHalloween(date) {
 function arHost(date) {
   const d = date === undefined ? new Date() : date;
   return arHalloween(d) || inomSasong(HOST_FRAN, HOST_TILL, d);
+}
+
+// Stjärngossestruten bärs lucciaveckan, den 10 till 14 december.
+const LUCIA_FRAN = { manad: 12, dag: 10 };
+const LUCIA_TILL = { manad: 12, dag: 14 };
+
+function arLucia(date) {
+  const d = date === undefined ? new Date() : date;
+  return arVinter(d) && inomSasong(LUCIA_FRAN, LUCIA_TILL, d);
 }
 
 // Tomteluvan gäller från den 16 december till och med trettondedagen.
