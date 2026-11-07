@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v27 (7 nov, utan ritade löv)";
+const APP_VERSION = "v28 (7 nov, vinterkiwi)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -679,12 +679,16 @@ function applyStatDecay() {
    Båda djuren är riktiga illustrationer, inte ritade i kod.
    Varje min och varje nivå har sin egen pose ur bildarken.
    --------------------------------------------------------- */
-// Kiwifågeln har en höstuppsättning där den står i en lövhög. Samma poser,
-// samma nummer, bara en annan teckning. Den gäller hela hösten, alltså fram
-// till och med den 30 november.
+// Kiwifågeln har fyra uppsättningar: vardag, höst i lövhög, vinter med mössa
+// och halsduk, och tomteluva mellan den 16 december och trettondedagen. Samma
+// poser och samma nummer i alla, bara andra teckningar, så humör, sömn och
+// nivåer fungerar likadant hela året.
 function kiwiFil(n) {
   const nr = String(n).padStart(2, "0");
-  return arHost() ? `djur/kiwi-host-${nr}.png` : `djur/kiwi-${nr}.png`;
+  if (arTomte()) return `djur/kiwi-tomte-${nr}.png`;
+  if (arVinter()) return `djur/kiwi-vinter-${nr}.png`;
+  if (arHost()) return `djur/kiwi-host-${nr}.png`;
+  return `djur/kiwi-${nr}.png`;
 }
 
 const PET_ART = {
@@ -806,6 +810,19 @@ function arHalloween(date) {
 function arHost(date) {
   const d = date === undefined ? new Date() : date;
   return arHalloween(d) || inomSasong(HOST_FRAN, HOST_TILL, d);
+}
+
+// Tomteluvan gäller från den 16 december till och med trettondedagen.
+// Fönstret går över ett årsskifte, det klarar inomSasong.
+const TOMTE_FRAN = { manad: 12, dag: 16 };
+const TOMTE_TILL = { manad: 1, dag: 6 };
+
+// Sätts till true när tomteteckningarna ligger i djur-mappen.
+const HAR_TOMTEBILDER = false;
+
+function arTomte(date) {
+  const d = date === undefined ? new Date() : date;
+  return HAR_TOMTEBILDER && arVinter(d) && inomSasong(TOMTE_FRAN, TOMTE_TILL, d);
 }
 
 function arVinter(date) {
