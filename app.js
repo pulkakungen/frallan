@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v24 (5 nov, mössa och halsduk)";
+const APP_VERSION = "v25 (7 nov, nya kiwifåglar)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -681,22 +681,16 @@ function applyStatDecay() {
    --------------------------------------------------------- */
 const PET_ART = {
   kiwi: {
-    file: (n) => `djur/kiwi-${String(n).padStart(2, "0")}.svg`,
-    mood: { yum: 18, love: 11 },
-    sleep: 2,
-    wonder: 3,
-    tear: 5,
+    file: (n) => `djur/kiwi-${String(n).padStart(2, "0")}.png`,
+    mood: { yum: 2, love: 7 },
+    sleep: 5,
+    wonder: 0,
+    tear: 3,
     idle: [
-      { level: 1, pose: 13, label: "Kiwi" },
-      { level: 2, pose: 17, label: "Spanaren" },
-      { level: 4, pose: 7, label: "Promenaden" },
-      { level: 6, pose: 0, label: "Springaren" },
-      { level: 8, pose: 9, label: "Vilostunden" },
-      { level: 10, pose: 16, label: "Blomman" },
-      { level: 12, pose: 19, label: "Hatten" },
-      { level: 14, pose: 8, label: "Ballongen" },
-      { level: 16, pose: 12, label: "Brevet" },
-      { level: 18, pose: 15, label: "Viften" }
+      { level: 1, pose: 1, label: "Kiwi" },
+      { level: 5, pose: 8, label: "Promenaden" },
+      { level: 10, pose: 6, label: "Spanaren" },
+      { level: 15, pose: 4, label: "Vilostunden" }
     ]
   },
   fox: {
@@ -1022,6 +1016,9 @@ function renderHalloweenPynt() {
   );
 }
 
+// Kiwifågelns rader är avstängda: de nya teckningarna är luddiga och saknar
+// tydlig hals, så påritade plagg ser klistrade ut. Mössa och halsduk ritas in
+// i teckningarna i stället. Proportionen är kvar så raderna går att tända.
 // Var mössan och halsduken sitter i varje pose. a är posens höjd delad med
 // bredden, h är [x, y, bredd] för mössans brätte och s detsamma för
 // halsduken, allt som andelar av bilden. Siffrorna är uppmätta ur varje
@@ -1029,26 +1026,15 @@ function renderHalloweenPynt() {
 // redan har något på huvudet. null betyder att plagget hoppas över.
 const VINTERPLAGG = {
  kiwi: [
-  { a: 0.827, h: [0.685,0.16,0.335], s: [0.477,0.394,0.473] },
-  { a: 1.665, h: [0.642,0.153,0.18], s: [0.448,0.393,0.401] },
-  { a: 1.175, h: null, s: [0.507,0.39,0.52] },
-  { a: 1.084, h: [0.375,0.148,0.34], s: [0.53,0.39,0.52] },
-  { a: 0.931, h: [0.445,0.152,0.214], s: [0.51,0.391,0.52] },
-  { a: 1.17, h: [0.292,0.153,0.298], s: [0.43,0.393,0.52] },
-  { a: 0.943, h: [0.453,0.157,0.313], s: [0.482,0.394,0.52] },
-  { a: 1.028, h: [0.603,0.148,0.329], s: [0.393,0.39,0.52] },
-  { a: 1.264, h: [0.743,0.148,0.34], s: [0.525,0.388,0.52] },
-  { a: 1.078, h: [0.547,0.152,0.34], s: [0.623,0.389,0.436] },
-  { a: 0.788, h: [0.535,0.16,0.34], s: [0.422,0.392,0.52] },
-  { a: 0.923, h: [0.44,0.152,0.34], s: [0.495,0.391,0.52] },
-  { a: 0.626, h: [0.67,0.176,0.338], s: [0.6,0.399,0.52] },
-  { a: 1.288, h: [0.542,0.153,0.34], s: [0.525,0.393,0.52] },
-  { a: 0.483, h: [0.657,0.195,0.338], s: [0.535,0.405,0.52] },
-  { a: 1.23, h: [0.542,0.153,0.34], s: [0.525,0.393,0.52] },
-  { a: 1.316, h: [0.425,0.152,0.335], s: [0.505,0.391,0.52] },
-  { a: 1.189, h: [0.61,0.148,0.298], s: [0.55,0.39,0.52] },
-  { a: 1.326, h: [0.485,0.148,0.34], s: [0.487,0.39,0.52] },
-  { a: 1.181, h: null, s: [0.43,0.39,0.432] }
+  { a: 1.35, h: null, s: null },
+  { a: 1.412, h: null, s: null },
+  { a: 0.681, h: null, s: null },
+  { a: 0.757, h: null, s: null },
+  { a: 0.906, h: null, s: null },
+  { a: 0.725, h: null, s: null },
+  { a: 1.53, h: null, s: null },
+  { a: 0.927, h: null, s: null },
+  { a: 0.817, h: null, s: null }
  ],
  fox: [
   { a: 1.071, h: [0.525,0.153,0.34], s: [0.593,0.393,0.52] },
