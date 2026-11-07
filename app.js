@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v29 (7 nov, luciakiwi)";
+const APP_VERSION = "v30 (7 nov, tomtekiwi)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -827,12 +827,9 @@ function arLucia(date) {
 const TOMTE_FRAN = { manad: 12, dag: 16 };
 const TOMTE_TILL = { manad: 1, dag: 6 };
 
-// Sätts till true när tomteteckningarna ligger i djur-mappen.
-const HAR_TOMTEBILDER = false;
-
 function arTomte(date) {
   const d = date === undefined ? new Date() : date;
-  return HAR_TOMTEBILDER && arVinter(d) && inomSasong(TOMTE_FRAN, TOMTE_TILL, d);
+  return arVinter(d) && inomSasong(TOMTE_FRAN, TOMTE_TILL, d);
 }
 
 function arVinter(date) {
