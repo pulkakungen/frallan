@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v26 (7 nov, höstkiwi)";
+const APP_VERSION = "v27 (7 nov, utan ritade löv)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -912,19 +912,7 @@ function halloweenPyntHTML() {
   );
 }
 
-// Löv som faller genom djurets ruta hela hösten, och under halloweenveckan
-// en fladdermus som flyger förbi. Tiderna är satta för hand så att inget
-// hamnar i takt med något annat.
-const FALLANDE_LOV = [
-  { left: 7, dur: 11, delay: 0 },
-  { left: 23, dur: 16, delay: 6 },
-  { left: 39, dur: 13, delay: 3 },
-  { left: 55, dur: 18, delay: 9 },
-  { left: 71, dur: 12, delay: 14 },
-  { left: 88, dur: 15, delay: 4 }
-];
-
-// Några få snöflingor, långsammare än löven och i glesare banor.
+// Några få snöflingor, i glesa banor och olika fart.
 const SNOFLINGOR = [
   { left: 16, dur: 19, delay: 0, storlek: 1.1 },
   { left: 42, dur: 26, delay: 9, storlek: 0.85 },
@@ -939,17 +927,12 @@ function stageSnoHTML() {
   ).join("");
 }
 
+// Under halloweenveckan flyger en fladdermus förbi i djurets ruta. Löven som
+// föll här är borttagna: höstkiwin står i en egen lövhög, och två lager löv
+// blev rörigt.
 function stageFallHTML(halloween) {
-  const delar = [];
-  if (halloween) {
-    delar.push('<span class="fall-del fall-flmus" style="animation-duration:26s;animation-delay:-3s">\u{1F987}</span>');
-  }
-  FALLANDE_LOV.forEach((l, i) => {
-    delar.push(
-      `<span class="fall-del fall-lov" style="left:${l.left}%;animation-duration:${l.dur}s;animation-delay:-${l.delay}s">${PYNT_LOV[i % PYNT_LOV.length]}</span>`
-    );
-  });
-  return delar.join("");
+  if (!halloween) return "";
+  return '<span class="fall-del fall-flmus" style="animation-duration:26s;animation-delay:-3s">\u{1F987}</span>';
 }
 
 // Löv som redan landat, utspridda längs marken bredvid djuret. De två
@@ -974,9 +957,9 @@ function stagePyntHTML(halloween, host, advent) {
     delar.push('<span class="stage-pynt-del stage-pumpa-stor">\u{1F383}</span>');
     delar.push('<span class="stage-pynt-del stage-pumpa-liten">\u{1F383}</span>');
   }
-  // Höstkiwin står redan i en lövhög. Två lövhögar på samma mark blir rörigt,
-  // så de ritade marklöven hoppas över då.
-  if (!host || state.petType === "kiwi") return delar.join("");
+  // Höstkiwin står redan i en lövhög, så marklöven hoppas över då. Under
+  // halloweenveckan bär kiwin lakanet i stället och då behövs de igen.
+  if (!host || (state.petType === "kiwi" && !halloween)) return delar.join("");
   MARKLOV.forEach((l, i) => {
     if (halloween && l.kant) return;
     // Vänstra hörnet är ljusstakens plats när den står framme.
@@ -1018,7 +1001,7 @@ function renderHalloweenPynt() {
     (halloween ? "halloween" : host ? "host" : "") +
     (advent ? `advent${advent.placerade}-${advent.tanda}` : "");
   fyllPyntLager(document.getElementById("halloween-pynt"), halloween, "halloween", halloweenPyntHTML);
-  fyllPyntLager(document.getElementById("stage-fall"), host || vinter, fallNyckel, () =>
+  fyllPyntLager(document.getElementById("stage-fall"), halloween || vinter, fallNyckel, () =>
     vinter ? stageSnoHTML() : stageFallHTML(halloween)
   );
   fyllPyntLager(document.getElementById("stage-pynt"), host || !!advent, markNyckel, () =>

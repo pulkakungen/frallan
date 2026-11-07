@@ -733,8 +733,8 @@ body.vinter #leaves-bg::after {
   z-index: 0;
 }
 #stage-fall[hidden] { display: none; }
-/* Bubblan och knapparna ska ligga över löven, så ett löv aldrig ser ut att
-   sitta fast på knappen. */
+/* Bubblan och knapparna ska ligga över pyntet, så inget ser ut att sitta
+   fast på knappen. */
 .pet-speech-bubble, .feed-buttons { position: relative; z-index: 1; }
 .fall-del {
   position: absolute;
@@ -742,17 +742,7 @@ body.vinter #leaves-bg::after {
   user-select: none;
   will-change: transform, top;
 }
-.fall-lov {
-  font-size: 1.3rem;
-  opacity: 0.8;
-  animation: stage-lov linear infinite;
-}
-@keyframes stage-lov {
-  from { top: -14%; transform: translateX(0) rotate(0deg); }
-  50%  { top: 50%; transform: translateX(22px) rotate(180deg); }
-  to   { top: 114%; transform: translateX(-10px) rotate(370deg); }
-}
-/* Snöflingorna faller långsammare än löven och vaggar mer i sidled. */
+/* Snöflingorna faller sakta och vaggar i sidled. */
 .fall-flinga {
   opacity: 0.9;
   animation: stage-sno linear infinite;
@@ -838,6 +828,6 @@ body.vinter #leaves-bg::after {
 /* Den som stängt av rörelse i telefonen får pyntet stillastående i stället. */
 @media (prefers-reduced-motion: reduce) {
   .fall-del, .stage-pynt-del, .stage-lov, .ljus-laga { animation: none !important; }
-  .fall-lov, .fall-flinga { top: 24%; opacity: 0.5; }
+  .fall-flinga { top: 24%; opacity: 0.5; }
   .fall-flmus { top: 6%; }
 }
