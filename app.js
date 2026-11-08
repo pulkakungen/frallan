@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v32 (8 nov, rensade bilder)";
+const APP_VERSION = "v33 (8 nov, januarikiwi)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
@@ -679,14 +679,16 @@ function applyStatDecay() {
    Båda djuren är riktiga illustrationer, inte ritade i kod.
    Varje min och varje nivå har sin egen pose ur bildarken.
    --------------------------------------------------------- */
-// Kiwifågeln har sex uppsättningar: vardag, vår bland tulpaner, höst i
-// lövhög, vinter med mössa och halsduk, stjärngossestrut lucciaveckan och
-// tomteluva från den 16 december. Samma poser och samma nummer i alla, bara
-// andra teckningar, så humör, sömn och nivåer fungerar likadant hela året.
+// Kiwifågeln har sju uppsättningar: vardag, vår bland tulpaner, höst i
+// lövhög, vinter med mössa och halsduk, stjärngossestrut lucciaveckan,
+// tomteluva från den 16 december och snödriva i januari. Samma poser och
+// samma nummer i alla, bara andra teckningar, så humör, sömn och nivåer
+// fungerar likadant hela året.
 function kiwiFil(n) {
   const nr = String(n).padStart(2, "0");
   if (arTomte()) return `djur/kiwi-tomte-${nr}.png`;
   if (arLucia()) return `djur/kiwi-lucia-${nr}.png`;
+  if (arJanuari()) return `djur/kiwi-januari-${nr}.png`;
   if (arVinter()) return `djur/kiwi-vinter-${nr}.png`;
   if (arVar()) return `djur/kiwi-var-${nr}.png`;
   if (arHost()) return `djur/kiwi-host-${nr}.png`;
@@ -816,6 +818,26 @@ function arHalloween(date) {
 function arHost(date) {
   const d = date === undefined ? new Date() : date;
   return arHalloween(d) || inomSasong(HOST_FRAN, HOST_TILL, d);
+}
+
+// Januariuppsättningen, kiwin i en snödriva, gäller hela januari och sedan
+// till och med vecka 8. Veckonumret räknas fram, så slutdatumet flyttar sig
+// med kalendern: söndagen den 28 februari 2027, den 27 februari 2028.
+function isoVecka(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  // Torsdagen i samma vecka avgör vilket år veckan hör till.
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const forsta = new Date(d.getFullYear(), 0, 4);
+  forsta.setDate(forsta.getDate() + 3 - ((forsta.getDay() + 6) % 7));
+  return 1 + Math.round((d - forsta) / 604800000);
+}
+
+// Tomteluvan går före i början av januari, den kollas först i kiwiFil.
+function arJanuari(date) {
+  const d = date === undefined ? new Date() : date;
+  const m = d.getMonth() + 1;
+  if (m === 1) return true;
+  return m === 2 && isoVecka(d) <= 8;
 }
 
 // Stjärngossestruten bärs lucciaveckan, den 10 till 14 december.
