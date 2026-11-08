@@ -7,7 +7,7 @@
    emoji och en högtalarknapp som läser upp uppgiften.
    ========================================================= */
 
-const APP_VERSION = "v31 (7 nov, vårkiwi)";
+const APP_VERSION = "v32 (8 nov, rensade bilder)";
 
 const DEMO_MODE = new URLSearchParams(location.search).get("demo") === "1";
 const STORAGE_KEY = DEMO_MODE ? "frallan_demo_state_v1" : "frallan_state_v1";
